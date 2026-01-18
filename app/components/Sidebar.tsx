@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+
 import {
   LayoutDashboard,
   Shield,
@@ -38,10 +39,10 @@ import {
   Camera,
   Timer,
   ShieldCheck,
-  Award as Certificate,
+  Award,
   Ban,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface ChildMenuItem {
   title: string;
@@ -65,9 +66,9 @@ const menuItems = [
     icon: LayoutDashboard,
     order: 0,
     children: [
-      { title: "Dashboard", href: "/home/dashboard" },
-      { title: "License", href: "/home/license" },
-      { title: "Password", href: "/home/password" },
+      { title: "Dashboard", href: "/home/dashboard", icon: BarChart3 },
+      { title: "License", href: "/home/license", icon: Award },
+      { title: "Password", href: "/home/password", icon: Key },
     ],
   },
   {
@@ -311,13 +312,13 @@ function renderMenuItem(
             )}
             style={{ marginLeft: `${marginLeft}px` }}
           >
-            <span className="text-left truncate max-w-[100px]">
+            <span className="text-left truncate max-w-[140px]">
               {item.title}
             </span>
             {item.icon && <item.icon className="h-3 w-3 shrink-0" />}
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <CollapsibleContent className="overflow-hidden transition-all duration-200 ease-in-out data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown">
           <div className="space-y-1">
             {item.children?.map((child) =>
               renderMenuItem(
@@ -350,8 +351,10 @@ function renderMenuItem(
         className="flex justify-between items-center w-full"
       >
         <span className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-gray-400 rounded-full shrink-0" />
-          <span className="truncate max-w-[100px]">{item.title}</span>
+          {!item.icon && (
+            <span className="w-2 h-2 bg-gray-400 rounded-full shrink-0" />
+          )}
+          <span className="truncate max-w-[140px]">{item.title}</span>
         </span>
         {item.icon && <item.icon className="h-3 w-3 shrink-0" />}
       </Link>
