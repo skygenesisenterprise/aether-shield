@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 
 // Cette fonction s'exécute côté serveur
 function checkServerAuth() {
-  // Pour l'instant, on laisse passer tout le monde en développement
+  // Pour l'instant, on ne laisse passer personne en développement
   // En production, vous pourriez vérifier les cookies ou sessions ici
-  return true;
+  return false;
 }
 
 export default function Home() {
@@ -15,5 +15,5 @@ export default function Home() {
   }
 
   // Si authentifié, rediriger vers la boîte de réception
-  redirect("/home");
+  redirect("/home/dashboard");
 }
