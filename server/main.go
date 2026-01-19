@@ -27,8 +27,8 @@ func displayBanner() {
 	fmt.Printf("\033[0;37m")
 	fmt.Printf("\n")
 	fmt.Printf("\033[1;33m    ╔══════════════════════════════════════════════════════════════╗\n")
-	fmt.Printf("\033[1;33m    ║                        AETHER SHIELD                        ║\n")
-	fmt.Printf("\033[1;33m    ║                   Enterprise Security Platform                ║\n")
+	fmt.Printf("\033[1;33m    ║                        AETHER SHIELD                         ║\n")
+	fmt.Printf("\033[1;33m    ║                   Enterprise Security Platform               ║\n")
 	fmt.Printf("\033[1;33m    ║                      Version 1.0.0-alpha                     ║\n")
 	fmt.Printf("\033[1;33m    ╚══════════════════════════════════════════════════════════════╝\n")
 	fmt.Printf("\033[0;37m")
@@ -39,15 +39,15 @@ func displayBanner() {
 	fmt.Printf("\033[1;32m[✓] CPU Cores: %d\033[0m\n", runtime.NumCPU())
 	fmt.Printf("\033[1;32m[✓] Process ID: %d\033[0m\n", os.Getpid())
 	fmt.Printf("\n")
-	fmt.Printf("\033[1;34m[i] Initializing security modules...\033[0m\n")
+	fmt.Printf("\033[1;34m[info] Initializing security modules...\033[0m\n")
 	time.Sleep(500 * time.Millisecond)
-	fmt.Printf("\033[1;34m[i] Loading authentication services...\033[0m\n")
+	fmt.Printf("\033[1;34m[info] Loading authentication services...\033[0m\n")
 	time.Sleep(300 * time.Millisecond)
-	fmt.Printf("\033[1;34m[i] Configuring firewall rules...\033[0m\n")
+	fmt.Printf("\033[1;34m[info] Configuring firewall rules...\033[0m\n")
 	time.Sleep(300 * time.Millisecond)
-	fmt.Printf("\033[1;34m[i] Starting network monitoring...\033[0m\n")
+	fmt.Printf("\033[1;34m[info] Starting network monitoring...\033[0m\n")
 	time.Sleep(300 * time.Millisecond)
-	fmt.Printf("\033[1;34m[i] Setting up API endpoints...\033[0m\n")
+	fmt.Printf("\033[1;34m[info] Setting up API endpoints...\033[0m\n")
 	time.Sleep(200 * time.Millisecond)
 	fmt.Printf("\n")
 }
@@ -60,13 +60,16 @@ func main() {
 	authService := services.NewAuthService(cfg.JWTSecret, cfg.RefreshTokenSecret)
 	homeService := services.NewHomeService()
 	systemService := services.NewSystemService()
+	interfaceService := services.NewInterfaceService()
 
 	authController := controllers.NewAuthController(authService)
 	homeController := controllers.NewHomeController(homeService)
 	systemController := controllers.NewSystemController(systemService)
+	interfaceController := controllers.NewInterfaceController(interfaceService)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 	homeMiddleware := middleware.NewHomeMiddleware()
 	systemMiddleware := middleware.NewSystemMiddleware()
+	interfaceMiddleware := middleware.NewInterfaceMiddleware()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -77,7 +80,7 @@ func main() {
 	// Disable Gin debug output
 	gin.DefaultWriter = io.Discard
 
-	routes.SetupRoutes(router, authController, homeController, systemController, authMiddleware, homeMiddleware, systemMiddleware)
+	routes.SetupRoutes(router, authController, homeController, systemController, interfaceController, authMiddleware, homeMiddleware, systemMiddleware, interfaceMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -87,15 +90,15 @@ func main() {
 	fmt.Printf("\033[1;32m[✓] All systems operational\033[0m\n")
 	fmt.Printf("\n")
 	fmt.Printf("\033[1;36m┌─────────────────────────────────────────────────────────────────┐\n")
-	fmt.Printf("\033[1;36m│                         🚀 SERVER READY                        │\n")
+	fmt.Printf("\033[1;36m│                         🚀 SERVER READY                         │\n")
 	fmt.Printf("\033[1;36m├─────────────────────────────────────────────────────────────────┤\n")
 	fmt.Printf("\033[1;36m│  🌐 Server listening on: http://localhost:%s                    │\n", port)
 	fmt.Printf("\033[1;36m│  📊 Dashboard: http://localhost:%s/api/v1/home/dashboard        │\n", port)
 	fmt.Printf("\033[1;36m│  🔐 API Docs: http://localhost:%s/api/v1                        │\n", port)
-	fmt.Printf("\033[1;36m│  ⚡ Mode: %s                                               │\n", gin.Mode())
+	fmt.Printf("\033[1;36m│  ⚡ Mode: %s                                                    │\n", gin.Mode())
 	fmt.Printf("\033[1;36m└─────────────────────────────────────────────────────────────────┘\n")
 	fmt.Printf("\033[0;37m\n")
-	fmt.Printf("\033[1;33m[i] Press Ctrl+C to stop the server\033[0m\n\n")
+	fmt.Printf("\033[1;33m[info] Press Ctrl+C to stop the server\033[0m\n\n")
 
 	log.Fatal(router.Run(":" + port))
 }

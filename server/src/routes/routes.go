@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -142,6 +142,58 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 				trust.GET("/revocation", systemController.GetRevocation)
 				trust.GET("/settings", systemController.GetTrustSettings)
 			}
+		}
+
+		interfaces := api.Group("/interfaces")
+		{
+			interfaces.Use(authMiddleware.RequireAuth())
+			interfaces.Use(interfaceMiddleware.ValidateInterfaceAccess())
+
+			interfaces.GET("/assignments", interfaceController.GetAssignments)
+			interfaces.PUT("/assignments", interfaceMiddleware.ValidateJSON(), interfaceController.UpdateAssignments)
+			interfaces.GET("/devices", interfaceController.GetDevices)
+			interfaces.GET("/devices/gif", interfaceController.GetGifDevices)
+			interfaces.GET("/devices/gre", interfaceController.GetGreDevices)
+			interfaces.GET("/devices/lagg", interfaceController.GetLaggDevices)
+			interfaces.GET("/devices/vlan", interfaceController.GetVlanDevices)
+			interfaces.GET("/devices/vxlan", interfaceController.GetVxlanDevices)
+			interfaces.GET("/devices/loopback", interfaceController.GetLoopbackDevices)
+			interfaces.GET("/devices/point-to-point", interfaceController.GetPointToPointDevices)
+			interfaces.GET("/devices/bridges", interfaceController.GetBridgeDevices)
+
+			// Diagnostics
+			diagnostics := interfaces.Group("/diagnostics")
+			{
+				diagnostics.GET("/ping", interfaceController.GetPing)
+				diagnostics.POST("/ping", interfaceMiddleware.ValidateJSON(), interfaceController.ExecutePing)
+				diagnostics.GET("/traceroute", interfaceController.GetTraceroute)
+				diagnostics.POST("/traceroute", interfaceMiddleware.ValidateJSON(), interfaceController.ExecuteTraceroute)
+				diagnostics.GET("/netstat", interfaceController.GetNetstat)
+				diagnostics.GET("/dns-lookup", interfaceController.GetDNSLookup)
+				diagnostics.POST("/dns-lookup", interfaceMiddleware.ValidateJSON(), interfaceController.ExecuteDNSLookup)
+				diagnostics.GET("/packet-capture", interfaceController.GetPacketCapture)
+				diagnostics.POST("/packet-capture", interfaceMiddleware.ValidateJSON(), interfaceController.ExecutePacketCapture)
+				diagnostics.GET("/arp-tables", interfaceController.GetArpTables)
+				diagnostics.GET("/portprobe", interfaceController.GetPortprobe)
+				diagnostics.POST("/portprobe", interfaceMiddleware.ValidateJSON(), interfaceController.ExecutePortprobe)
+			}
+
+			interfaces.GET("/neighbors", interfaceController.GetNeighbors)
+			interfaces.GET("/overview", interfaceController.GetOverview)
+			interfaces.GET("/settings", interfaceController.GetSettings)
+			interfaces.PUT("/settings", interfaceMiddleware.ValidateJSON(), interfaceController.UpdateSettings)
+
+			// Virtual IPs
+			virtualIps := interfaces.Group("/virtual-ips")
+			{
+				virtualIps.GET("/status", interfaceController.GetVirtualIPStatus)
+				virtualIps.GET("/settings", interfaceController.GetVirtualIPSettings)
+				virtualIps.PUT("/settings", interfaceMiddleware.ValidateJSON(), interfaceController.UpdateVirtualIPSettings)
+			}
+
+			interfaces.GET("/wan", interfaceController.GetWan)
+			interfaces.PUT("/wan", interfaceMiddleware.ValidateJSON(), interfaceController.UpdateWan)
+			interfaces.GET("/wireless/devices", interfaceController.GetWirelessDevices)
 		}
 	}
 }
