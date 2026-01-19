@@ -62,18 +62,21 @@ func main() {
 	systemService := services.NewSystemService()
 	interfaceService := services.NewInterfaceService()
 	firewallService := services.NewFirewallService()
+	vpnService := services.NewVPNService(cfg.Database)
 
 	authController := controllers.NewAuthController(authService)
 	homeController := controllers.NewHomeController(homeService)
 	systemController := controllers.NewSystemController(systemService)
 	interfaceController := controllers.NewInterfaceController(interfaceService)
 	firewallController := controllers.NewFirewallController(firewallService)
+	vpnController := controllers.NewVPNController(vpnService)
 
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 	homeMiddleware := middleware.NewHomeMiddleware()
 	systemMiddleware := middleware.NewSystemMiddleware()
 	interfaceMiddleware := middleware.NewInterfaceMiddleware()
 	firewallMiddleware := middleware.NewFirewallMiddleware()
+	vpnMiddleware := middleware.NewVPNMiddleware()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -84,7 +87,7 @@ func main() {
 	// Disable Gin debug output
 	gin.DefaultWriter = io.Discard
 
-	routes.SetupRoutes(router, authController, homeController, systemController, interfaceController, firewallController, authMiddleware, homeMiddleware, systemMiddleware, interfaceMiddleware, firewallMiddleware)
+	routes.SetupRoutes(router, authController, homeController, systemController, interfaceController, firewallController, vpnController, authMiddleware, homeMiddleware, systemMiddleware, interfaceMiddleware, firewallMiddleware, vpnMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {

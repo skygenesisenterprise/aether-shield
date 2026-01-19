@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -269,6 +269,57 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 				diagnostics.GET("/states", firewallController.GetStates)
 				diagnostics.GET("/aliases", firewallController.GetAliasDiagnostics)
 				diagnostics.GET("/sessions", firewallController.GetSessions)
+			}
+		}
+
+		vpn := api.Group("/vpn")
+		{
+			vpn.Use(authMiddleware.RequireAuth())
+			vpn.Use(vpnMiddleware.ValidateVPNAccess())
+
+			// OpenVPN
+			openvpn := vpn.Group("/openvpn")
+			{
+				openvpn.GET("/instances", vpnController.GetOpenVPNInstances)
+				openvpn.POST("/instances", vpnMiddleware.ValidateJSON(), vpnController.CreateOpenVPNInstance)
+				openvpn.PUT("/instances/:id", vpnMiddleware.ValidateJSON(), vpnController.UpdateOpenVPNInstance)
+				openvpn.DELETE("/instances/:id", vpnController.DeleteOpenVPNInstance)
+				openvpn.GET("/status", vpnController.GetOpenVPNStatus)
+				openvpn.GET("/log", vpnController.GetOpenVPNLog)
+				openvpn.GET("/export", vpnController.GetOpenVPNExport)
+				openvpn.GET("/client-overwrites", vpnController.GetOpenVPNClientOverwrites)
+			}
+
+			// WireGuard
+			wireguard := vpn.Group("/wireguard")
+			{
+				wireguard.GET("/instances", vpnController.GetWireGuardInstances)
+				wireguard.POST("/instances", vpnMiddleware.ValidateJSON(), vpnController.CreateWireGuardInstance)
+				wireguard.PUT("/instances/:id", vpnMiddleware.ValidateJSON(), vpnController.UpdateWireGuardInstance)
+				wireguard.DELETE("/instances/:id", vpnController.DeleteWireGuardInstance)
+				wireguard.GET("/status", vpnController.GetWireGuardStatus)
+				wireguard.GET("/log", vpnController.GetWireGuardLog)
+				wireguard.GET("/peers", vpnController.GetWireGuardPeers)
+				wireguard.POST("/peers", vpnMiddleware.ValidateJSON(), vpnController.CreateWireGuardPeer)
+				wireguard.PUT("/peers/:id", vpnMiddleware.ValidateJSON(), vpnController.UpdateWireGuardPeer)
+				wireguard.DELETE("/peers/:id", vpnController.DeleteWireGuardPeer)
+				wireguard.GET("/peer-generator", vpnController.GetWireGuardPeerGenerator)
+			}
+
+			// IPsec
+			ipsec := vpn.Group("/ipsec")
+			{
+				ipsec.GET("/connections", vpnController.GetIPSecConnections)
+				ipsec.GET("/sessions", vpnController.GetIPSecSessions)
+				ipsec.GET("/settings", vpnController.GetIPSecSettings)
+				ipsec.PUT("/settings", vpnMiddleware.ValidateJSON(), vpnController.UpdateIPSecSettings)
+				ipsec.GET("/pre-shared-keys", vpnController.GetIPSecPreSharedKeys)
+				ipsec.GET("/key-pairs", vpnController.GetIPSecKeyPairs)
+				ipsec.GET("/sad", vpnController.GetIPSecSAD)
+				ipsec.GET("/spd", vpnController.GetIPSecSPD)
+				ipsec.GET("/vti", vpnController.GetIPSecVTI)
+				ipsec.GET("/leases", vpnController.GetIPSecLeases)
+				ipsec.GET("/log", vpnController.GetIPSecLog)
 			}
 		}
 	}
