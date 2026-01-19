@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -194,6 +194,82 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 			interfaces.GET("/wan", interfaceController.GetWan)
 			interfaces.PUT("/wan", interfaceMiddleware.ValidateJSON(), interfaceController.UpdateWan)
 			interfaces.GET("/wireless/devices", interfaceController.GetWirelessDevices)
+		}
+
+		firewall := api.Group("/firewall")
+		{
+			firewall.Use(authMiddleware.RequireAuth())
+			firewall.Use(firewallMiddleware.ValidateFirewallAccess())
+
+			// Rules & Aliases
+			rules := firewall.Group("/rules")
+			{
+				rules.GET("/wan", firewallController.GetWanRules)
+				rules.GET("/floating", firewallController.GetFloatingRules)
+				rules.POST("", firewallMiddleware.ValidateJSON(), firewallController.CreateRule)
+				rules.PUT("/:id", firewallMiddleware.ValidateJSON(), firewallController.UpdateRule)
+				rules.DELETE("/:id", firewallController.DeleteRule)
+			}
+
+			firewall.GET("/aliases", firewallController.GetAliases)
+			firewall.POST("/aliases", firewallMiddleware.ValidateJSON(), firewallController.CreateAlias)
+			firewall.PUT("/aliases/:id", firewallMiddleware.ValidateJSON(), firewallController.UpdateAlias)
+			firewall.DELETE("/aliases/:id", firewallController.DeleteAlias)
+			firewall.GET("/categories", firewallController.GetCategories)
+			firewall.GET("/groups", firewallController.GetGroups)
+
+			// Automation
+			automation := firewall.Group("/automation")
+			{
+				automation.GET("/filter", firewallController.GetAutomationFilter)
+				automation.GET("/source-nat", firewallController.GetAutomationSourceNat)
+			}
+
+			// NAT
+			nat := firewall.Group("/nat")
+			{
+				nat.GET("/one-to-one", firewallController.GetOneToOneNat)
+				nat.GET("/outbound", firewallController.GetOutboundNat)
+				nat.GET("/port-forward", firewallController.GetPortForward)
+				nat.GET("/nptv6", firewallController.GetNptv6Nat)
+			}
+
+			// Traffic Shaping
+			shaper := firewall.Group("/shaper")
+			{
+				shaper.GET("/queues", firewallController.GetQueues)
+				shaper.GET("/rules", firewallController.GetShaperRules)
+				shaper.GET("/pipes", firewallController.GetPipes)
+				shaper.GET("/status", firewallController.GetShaperStatus)
+			}
+
+			// Settings & Logs
+			settings := firewall.Group("/settings")
+			{
+				settings.GET("/advanced", firewallController.GetAdvancedSettings)
+				settings.PUT("/advanced", firewallMiddleware.ValidateJSON(), firewallController.UpdateAdvancedSettings)
+				settings.GET("/normalization", firewallController.GetNormalizationSettings)
+				settings.PUT("/normalization", firewallMiddleware.ValidateJSON(), firewallController.UpdateNormalizationSettings)
+				settings.GET("/schedules", firewallController.GetSchedules)
+				settings.PUT("/schedules", firewallMiddleware.ValidateJSON(), firewallController.UpdateSchedules)
+			}
+
+			log := firewall.Group("/log")
+			{
+				log.GET("/general", firewallController.GetGeneralLog)
+				log.GET("/live", firewallController.GetLiveLog)
+				log.GET("/overview", firewallController.GetLogOverview)
+				log.GET("/plain-view", firewallController.GetPlainViewLog)
+			}
+
+			// Diagnostics
+			diagnostics := firewall.Group("/diagnostics")
+			{
+				diagnostics.GET("/statistics", firewallController.GetStatistics)
+				diagnostics.GET("/states", firewallController.GetStates)
+				diagnostics.GET("/aliases", firewallController.GetAliasDiagnostics)
+				diagnostics.GET("/sessions", firewallController.GetSessions)
+			}
 		}
 	}
 }
