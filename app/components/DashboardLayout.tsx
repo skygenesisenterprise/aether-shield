@@ -3,6 +3,7 @@
 import React from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { AIAssistantIcon } from "@/components/AIAssistantIcon";
 import { usePathname } from "next/navigation";
 import { redirect } from "next/navigation";
 
@@ -42,6 +43,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <Header />
         <main className="flex-1 overflow-auto bg-gray-50">{children}</main>
       </div>
+      <AIAssistantIcon
+        onClick={() => {
+          // TODO: Implement AI assistant chat interface
+          console.log("AI Assistant clicked");
+        }}
+      />
     </div>
   );
 }
