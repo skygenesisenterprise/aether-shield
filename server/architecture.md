@@ -341,7 +341,51 @@ GET    /api/v1/report/traffic
 GET    /api/v1/report/unbound-dns
 ```
 
-### 9. Real-time & WebSocket Endpoints
+### 9. Database Section
+
+#### Database Management
+
+```
+GET    /api/v1/database/tables
+POST   /api/v1/database/tables
+GET    /api/v1/database/tables/:name
+PUT    /api/v1/database/tables/:name
+DELETE /api/v1/database/tables/:name
+GET    /api/v1/database/schemas
+POST   /api/v1/database/schemas
+GET    /api/v1/database/schemas/:name
+DELETE /api/v1/database/schemas/:name
+```
+
+#### Database Operations
+
+```
+GET    /api/v1/database/queries
+POST   /api/v1/database/queries
+GET    /api/v1/database/queries/:id
+DELETE /api/v1/database/queries/:id
+POST   /api/v1/database/export
+GET    /api/v1/database/import
+POST   /api/v1/database/import
+GET    /api/v1/database/backup
+POST   /api/v1/database/backup
+GET    /api/v1/database/restore
+POST   /api/v1/database/restore
+```
+
+#### Database Monitoring
+
+```
+GET    /api/v1/database/status
+GET    /api/v1/database/performance
+GET    /api/v1/database/connections
+GET    /api/v1/database/statistics
+GET    /api/v1/database/logs
+GET    /api/v1/database/locks
+GET    /api/v1/database/slow-queries
+```
+
+### 10. Real-time & WebSocket Endpoints
 
 ```
 WS     /api/v1/ws/dashboard/metrics

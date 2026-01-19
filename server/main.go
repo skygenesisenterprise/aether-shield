@@ -59,11 +59,14 @@ func main() {
 
 	authService := services.NewAuthService(cfg.JWTSecret, cfg.RefreshTokenSecret)
 	homeService := services.NewHomeService()
+	systemService := services.NewSystemService()
 
 	authController := controllers.NewAuthController(authService)
 	homeController := controllers.NewHomeController(homeService)
+	systemController := controllers.NewSystemController(systemService)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 	homeMiddleware := middleware.NewHomeMiddleware()
+	systemMiddleware := middleware.NewSystemMiddleware()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -74,7 +77,7 @@ func main() {
 	// Disable Gin debug output
 	gin.DefaultWriter = io.Discard
 
-	routes.SetupRoutes(router, authController, homeController, authMiddleware, homeMiddleware)
+	routes.SetupRoutes(router, authController, homeController, systemController, authMiddleware, homeMiddleware, systemMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {
