@@ -1,6 +1,7 @@
 # Agent Guidelines for aether-mailer
 
 ## Commands
+
 - **Build**: `pnpm build` (Next.js production build)
 - **Lint**: `pnpm lint` (ESLint with Next.js rules)
 - **Dev**: `pnpm dev` (Next.js development server)
@@ -9,7 +10,8 @@
 ## Code Style
 
 ### General Guidelines
-- **Naming**: 
+
+- **Naming**:
   - camelCase for variables/functions, PascalCase for components and types
   - snake_case for Python variables/functions, UpperCamelCase for classes
   - snake_case or camelCase for Go exported variables/functions (use Go conventions)
@@ -28,12 +30,14 @@
   - Rust: built-in `#[cfg(test)]` module
 
 ### JavaScript/Node.js
+
 - **Framework**: Next.js 16 with React 19, TypeScript strict mode
 - **Styling**: Tailwind CSS v4 with CSS variables for theming
 - **Components**: Functional components with proper TypeScript typing
 - **Linting/Formatting**: ESLint + Prettier
 
 ### Go
+
 - **Formatting**: `gofmt` or `go fmt` mandatory
 - **Linting**: `golangci-lint`
 - **Modules**: Use Go modules, avoid vendoring unless necessary
@@ -41,6 +45,7 @@
 - **Concurrency**: Use goroutines carefully, prefer context propagation for cancellation
 
 ### Python
+
 - **Formatting**: `black` for code, `isort` for imports
 - **Linting**: `flake8` or `pylint`
 - **Typing**: Use type hints where possible
@@ -48,6 +53,7 @@
 - **Error Handling**: Catch specific exceptions, avoid bare `except`
 
 ### Rust
+
 - **Formatting**: `rustfmt`
 - **Linting**: `clippy`
 - **Error Handling**: Prefer `Result`/`Option`, use `?` operator for propagation
@@ -55,6 +61,7 @@
 - **Ownership**: Follow Rust ownership/borrowing best practices
 
 ## File Structure
+
 - `app/` directory for Next.js App Router
 - `public/` for static assets
 - Root-level config files (eslint.config.mjs, tsconfig.json, etc.)
@@ -63,8 +70,9 @@
 - Rust: `src/` directory with `main.rs` or `lib.rs`
 
 ## Commits
+
 - **Message Format**:
-feat(app): example phrase
+  feat(app): example phrase
 
 - description
 
@@ -73,7 +81,15 @@ feat(app): example phrase
 - **Description**: concise, imperative, lowercase first word
 - **Body**: optional, use bullet points for details
 
+## Documentation Generation
+
+- **README Files**: When generating documentation (README.md, markdown files), use `docs/examples/README_mailer.md` as inspiration reference
+- **Documentation Structure**: Follow the established patterns including badges, sections, tables, and formatting
+- **Technical Documentation**: Include architecture diagrams, status tables, and comprehensive feature descriptions
+- **Markdown Formatting**: Use proper markdown syntax with badges, emojis, and structured sections
+
 ## Accessibility & UX
+
 - Semantic HTML, proper alt texts
 - Keyboard navigation support
 - Dark mode: `dark:` prefixes and CSS variables
