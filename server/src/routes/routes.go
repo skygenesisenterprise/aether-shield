@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, servicesController *controllers.ServicesController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware, servicesMiddleware *middleware.ServicesMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -321,6 +321,68 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 				ipsec.GET("/leases", vpnController.GetIPSecLeases)
 				ipsec.GET("/log", vpnController.GetIPSecLog)
 			}
+		}
+
+		services := api.Group("/services")
+		{
+			services.Use(authMiddleware.RequireAuth())
+			services.Use(servicesMiddleware.ValidateServicesAccess())
+
+			// DHCP Services
+			dhcp := services.Group("/dhcp")
+			{
+				dhcp.GET("/v4", servicesController.GetDHCPv4)
+				dhcp.GET("/log", servicesController.GetDHCPLog)
+				dhcp.GET("/leases6", servicesController.GetDHCPLeases6)
+				dhcp.GET("/status", servicesController.GetDHCPStatus)
+			}
+
+			dhcprelay := services.Group("/dhcprelay")
+			{
+				dhcprelay.GET("/configs", servicesController.GetDHCPRelayConfigs)
+				dhcprelay.GET("/log", servicesController.GetDHCPRelayLog)
+			}
+
+			dhcpv4 := services.Group("/dhcpv4")
+			{
+				dhcpv4.GET("/leases", servicesController.GetDHCPv4Leases)
+				dhcpv4.GET("/log", servicesController.GetDHCPv4Log)
+				dhcpv4.GET("/static", servicesController.GetDHCPv4Static)
+				dhcpv4.POST("/static", servicesMiddleware.ValidateJSON(), servicesController.CreateDHCPv4Static)
+				dhcpv4.PUT("/static/:id", servicesMiddleware.ValidateJSON(), servicesController.UpdateDHCPv4Static)
+				dhcpv4.DELETE("/static/:id", servicesController.DeleteDHCPv4Static)
+			}
+
+			// DNS Services
+			unbound := services.Group("/unbound-dns")
+			{
+				unbound.GET("/statistics", servicesController.GetUnboundStatistics)
+				unbound.GET("/blocklist", servicesController.GetUnboundBlocklist)
+				unbound.GET("/settings", servicesController.GetUnboundSettings)
+				unbound.PUT("/settings", servicesMiddleware.ValidateJSON(), servicesController.UpdateUnboundSettings)
+			}
+
+			services.GET("/opendns", servicesController.GetOpenDNS)
+
+			// Monitoring Services
+			monit := services.Group("/monit")
+			{
+				monit.GET("/status", servicesController.GetMonitStatus)
+				monit.GET("/log", servicesController.GetMonitLog)
+				monit.GET("/settings", servicesController.GetMonitSettings)
+				monit.PUT("/settings", servicesMiddleware.ValidateJSON(), servicesController.UpdateMonitSettings)
+			}
+
+			network := services.Group("/network")
+			{
+				network.GET("/log", servicesController.GetNetworkLog)
+				network.GET("/status", servicesController.GetNetworkStatus)
+			}
+
+			// Additional Services
+			services.GET("/ntp/status", servicesController.GetNTPStatus)
+			services.GET("/snmp/status", servicesController.GetSNMPStatus)
+			services.GET("/syslog/status", servicesController.GetSyslogStatus)
 		}
 	}
 }
