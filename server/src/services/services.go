@@ -483,7 +483,7 @@ func (s *ServicesService) UpdateDHCPv4StaticMapping(ctx context.Context, id stri
 
 	// Write updated configuration back
 	updatedConfig := strings.Join(updatedLines, "\n")
-	if err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
+	if _, err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
 		return fmt.Errorf("failed to write DHCP configuration: %v", err)
 	}
 
@@ -526,7 +526,7 @@ func (s *ServicesService) DeleteDHCPv4StaticMapping(ctx context.Context, id stri
 
 	// Write updated configuration back
 	updatedConfig := strings.Join(updatedLines, "\n")
-	if err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
+	if _, err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
 		return fmt.Errorf("failed to write DHCP configuration: %v", err)
 	}
 
@@ -895,7 +895,7 @@ func (s *ServicesService) UpdateUnboundSettings(ctx context.Context, settings mo
 	}
 
 	// Write new configuration
-	if err := s.executeCommand("sh", "-c", "echo '"+config+"' > /etc/unbound/unbound.conf"); err != nil {
+	if _, err := s.executeCommand("sh", "-c", "echo '"+config+"' > /etc/unbound/unbound.conf"); err != nil {
 		return fmt.Errorf("failed to write configuration: %v", err)
 	}
 
@@ -1179,7 +1179,7 @@ func (s *ServicesService) UpdateMonitSettings(ctx context.Context, settings mode
 
 	// Write updated configuration
 	updatedConfig := strings.Join(updatedLines, "\n")
-	if err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/monit/monitrc"); err != nil {
+	if _, err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/monit/monitrc"); err != nil {
 		// Restore backup on error
 		s.executeCommand("mv", "/etc/monit/monitrc.bak", "/etc/monit/monitrc")
 		return fmt.Errorf("failed to write monit configuration: %v", err)
@@ -1292,7 +1292,6 @@ func (s *ServicesService) GetNTPStatus(ctx context.Context) (*model.ServiceStatu
 	// Check various NTP services
 	ntpServices := []string{"ntpd", "chronyd", "systemd-timesyncd", "ntp"}
 	var foundService string
-	var foundPID int
 
 	for _, service := range ntpServices {
 		if running, err := s.isServiceRunning(service); err == nil && running {
@@ -1305,7 +1304,6 @@ func (s *ServicesService) GetNTPStatus(ctx context.Context) (*model.ServiceStatu
 	// Get PID and other info for the found service
 	if foundService != "" {
 		if pid, err := s.getServicePID(foundService); err == nil {
-			foundPID = pid
 			status.PID = pid
 
 			// Get memory usage
@@ -1772,13 +1770,12 @@ func (s *ServicesService) getServiceMemoryUsage(pid int) (string, error) {
 func (s *ServicesService) BackupServiceConfig(ctx context.Context, serviceName string) error {
 	// Create backup directory if it doesn't exist
 	backupDir := "/etc/backups"
-	if err := s.executeCommand("mkdir", "-p", backupDir); err != nil {
+	if _, err := s.executeCommand("mkdir", "-p", backupDir); err != nil {
 		return fmt.Errorf("failed to create backup directory: %v", err)
 	}
 
 	// Generate timestamp for backup
 	timestamp := time.Now().Format("20060102-150405")
-	backupFile := fmt.Sprintf("%s/%s-%s.conf.bak", backupDir, serviceName, timestamp)
 
 	// Determine config file path based on service
 	var configFiles []string
@@ -1821,7 +1818,7 @@ func (s *ServicesService) BackupServiceConfig(ctx context.Context, serviceName s
 		backupPath := fmt.Sprintf("%s/%s-%s%s.bak", backupDir, serviceName, timestamp, strings.ReplaceAll(configFile, "/", "_"))
 
 		// Copy file to backup location
-		if err := s.executeCommand("cp", configFile, backupPath); err != nil {
+		if _, err := s.executeCommand("cp", configFile, backupPath); err != nil {
 			return fmt.Errorf("failed to backup %s: %v", configFile, err)
 		}
 
@@ -1833,12 +1830,12 @@ func (s *ServicesService) BackupServiceConfig(ctx context.Context, serviceName s
 	metadata := fmt.Sprintf("service: %s\nbackup_time: %s\noriginal_files: %s\n",
 		serviceName, time.Now().Format(time.RFC3339), strings.Join(configFiles, ","))
 
-	if err := s.executeCommand("sh", "-c", fmt.Sprintf("echo '%s' > %s", metadata, metadataFile)); err != nil {
+	if _, err := s.executeCommand("sh", "-c", fmt.Sprintf("echo '%s' > %s", metadata, metadataFile)); err != nil {
 		return fmt.Errorf("failed to create backup metadata: %v", err)
 	}
 
 	// Clean up old backups (keep last 10)
-	if err := s.executeCommand("sh", "-c", fmt.Sprintf("ls -t %s/%s-*.bak | tail -n +11 | xargs rm -f", backupDir, serviceName)); err != nil {
+	if _, err := s.executeCommand("sh", "-c", fmt.Sprintf("ls -t %s/%s-*.bak | tail -n +11 | xargs rm -f", backupDir, serviceName)); err != nil {
 		log.Printf("Warning: failed to clean up old backups: %v", err)
 	}
 
@@ -1897,23 +1894,23 @@ func (s *ServicesService) RestoreServiceConfig(ctx context.Context, serviceName 
 
 	// Create directory for original config if it doesn't exist
 	originalDir := strings.TrimSuffix(originalConfig, "/"+strings.Split(originalConfig, "/")[len(strings.Split(originalConfig, "/"))-1])
-	if err := s.executeCommand("mkdir", "-p", originalDir); err != nil {
+	if _, err := s.executeCommand("mkdir", "-p", originalDir); err != nil {
 		return fmt.Errorf("failed to create config directory: %v", err)
 	}
 
 	// Restore the configuration file
-	if err := s.executeCommand("cp", backupPath, originalConfig); err != nil {
+	if _, err := s.executeCommand("cp", backupPath, originalConfig); err != nil {
 		return fmt.Errorf("failed to restore configuration: %v", err)
 	}
 
 	// Set appropriate permissions
-	if err := s.executeCommand("chmod", "644", originalConfig); err != nil {
+	if _, err := s.executeCommand("chmod", "644", originalConfig); err != nil {
 		log.Printf("Warning: failed to set permissions on %s: %v", originalConfig, err)
 	}
 
 	// Set ownership if it's a system config file
 	if strings.HasPrefix(originalConfig, "/etc/") {
-		if err := s.executeCommand("chown", "root:root", originalConfig); err != nil {
+		if _, err := s.executeCommand("chown", "root:root", originalConfig); err != nil {
 			log.Printf("Warning: failed to set ownership on %s: %v", originalConfig, err)
 		}
 	}

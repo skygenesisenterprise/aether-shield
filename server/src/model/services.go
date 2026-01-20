@@ -164,6 +164,7 @@ type ServiceMetrics struct {
 	MemoryUsage    int64     `json:"memoryUsage"`
 	Connections    int       `json:"connections"`
 	RequestsPerSec float64   `json:"requestsPerSec"`
+	Threads        int       `json:"threads"`
 	Uptime         time.Time `json:"uptime"`
 	LastUpdated    time.Time `json:"lastUpdated"`
 }
