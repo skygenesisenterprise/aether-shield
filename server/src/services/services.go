@@ -432,7 +432,7 @@ host %s {
 	updatedConfig := config + newEntry
 
 	// Write back to file
-	if err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
+	if _, err := s.executeCommand("sh", "-c", "echo '"+updatedConfig+"' > /etc/dhcp/dhcpd.conf"); err != nil {
 		return fmt.Errorf("failed to write DHCP configuration: %v", err)
 	}
 

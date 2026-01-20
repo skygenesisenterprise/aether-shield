@@ -38,9 +38,9 @@ export function SystemInformation() {
   ];
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="bg-[#f5f5f5] py-2 px-3 border-b border-gray-200">
-        <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+    <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+      <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
           <Info className="h-4 w-4 text-orange-500" />
           System Information
         </CardTitle>
@@ -51,15 +51,15 @@ export function SystemInformation() {
             {systemData.map((item, index) => (
               <tr
                 key={index}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-800"}
               >
-                <td className="py-1.5 px-3 font-medium text-gray-600 w-1/3 border-b border-gray-100">
+                <td className="py-1.5 px-3 font-medium text-gray-300 w-1/3 border-b border-gray-700">
                   {item.label}
                 </td>
-                <td className="py-1.5 px-3 text-gray-700 border-b border-gray-100">
+                <td className="py-1.5 px-3 text-gray-200 border-b border-gray-700">
                   {item.showBar ? (
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-200 rounded h-4 overflow-hidden">
+                      <div className="flex-1 bg-gray-700 rounded h-4 overflow-hidden">
                         <div
                           className={`h-full ${
                             item.barValue < 50
@@ -74,7 +74,7 @@ export function SystemInformation() {
                       <span className="text-xs w-16">{item.value}</span>
                     </div>
                   ) : item.isLink ? (
-                    <a href="#" className="text-blue-600 hover:underline">
+                    <a href="#" className="text-blue-400 hover:underline">
                       {item.value}
                     </a>
                   ) : (

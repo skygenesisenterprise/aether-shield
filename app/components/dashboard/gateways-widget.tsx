@@ -35,9 +35,9 @@ const gateways = [
 
 export function GatewaysWidget() {
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="bg-[#f5f5f5] py-2 px-3 border-b border-gray-200">
-        <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+    <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+      <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
           <Globe className="h-4 w-4 text-orange-500" />
           Gateways
         </CardTitle>
@@ -45,26 +45,26 @@ export function GatewaysWidget() {
       <CardContent className="p-0">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+            <tr className="bg-gray-800 border-b border-gray-700">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Name
               </th>
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Gateway
               </th>
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Monitor
               </th>
-              <th className="py-1.5 px-2 text-center font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-center font-semibold text-gray-300">
                 RTT
               </th>
-              <th className="py-1.5 px-2 text-center font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-center font-semibold text-gray-300">
                 RTTsd
               </th>
-              <th className="py-1.5 px-2 text-center font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-center font-semibold text-gray-300">
                 Loss
               </th>
-              <th className="py-1.5 px-2 text-center font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-center font-semibold text-gray-300">
                 Status
               </th>
             </tr>
@@ -73,35 +73,35 @@ export function GatewaysWidget() {
             {gateways.map((gw, index) => (
               <tr
                 key={index}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-800"}
               >
-                <td className="py-1.5 px-2 font-medium text-gray-700 border-b border-gray-100">
+                <td className="py-1.5 px-2 font-medium text-gray-200 border-b border-gray-700">
                   <div className="flex items-center gap-1">
                     <ArrowUpDown className="h-3 w-3 text-gray-400" />
                     {gw.name}
                   </div>
                 </td>
-                <td className="py-1.5 px-2 text-gray-600 border-b border-gray-100 font-mono">
+                <td className="py-1.5 px-2 text-gray-300 border-b border-gray-700 font-mono">
                   {gw.gateway}
                 </td>
-                <td className="py-1.5 px-2 text-gray-600 border-b border-gray-100 font-mono">
+                <td className="py-1.5 px-2 text-gray-300 border-b border-gray-700 font-mono">
                   {gw.monitor}
                 </td>
-                <td className="py-1.5 px-2 text-center text-gray-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 text-center text-gray-300 border-b border-gray-700">
                   {gw.rtt}
                 </td>
-                <td className="py-1.5 px-2 text-center text-gray-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 text-center text-gray-300 border-b border-gray-700">
                   {gw.rttsd}
                 </td>
-                <td className="py-1.5 px-2 text-center text-gray-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 text-center text-gray-300 border-b border-gray-700">
                   {gw.loss}
                 </td>
-                <td className="py-1.5 px-2 text-center border-b border-gray-100">
+                <td className="py-1.5 px-2 text-center border-b border-gray-700">
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                       gw.status === "Online"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-green-900 text-green-300"
+                        : "bg-red-900 text-red-300"
                     }`}
                   >
                     {gw.status}

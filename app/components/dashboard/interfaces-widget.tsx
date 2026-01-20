@@ -56,9 +56,9 @@ const interfaces = [
 
 export function InterfacesWidget() {
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="bg-[#f5f5f5] py-2 px-3 border-b border-gray-200">
-        <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+    <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+      <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
           <Network className="h-4 w-4 text-orange-500" />
           Interfaces
         </CardTitle>
@@ -66,26 +66,26 @@ export function InterfacesWidget() {
       <CardContent className="p-0">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+            <tr className="bg-gray-800 border-b border-gray-700">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Name
               </th>
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Device
               </th>
-              <th className="py-1.5 px-2 text-left font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-left font-semibold text-gray-300">
                 Address
               </th>
-              <th className="py-1.5 px-2 text-center font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-center font-semibold text-gray-300">
                 Status
               </th>
-              <th className="py-1.5 px-2 text-right font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-right font-semibold text-gray-300">
                 <span className="flex items-center justify-end gap-1">
                   <ArrowDown className="h-3 w-3" />
                   In
                 </span>
               </th>
-              <th className="py-1.5 px-2 text-right font-semibold text-gray-600">
+              <th className="py-1.5 px-2 text-right font-semibold text-gray-300">
                 <span className="flex items-center justify-end gap-1">
                   <ArrowUp className="h-3 w-3" />
                   Out
@@ -97,37 +97,37 @@ export function InterfacesWidget() {
             {interfaces.map((iface, index) => (
               <tr
                 key={index}
-                className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-800"}
               >
-                <td className="py-1.5 px-2 font-medium text-blue-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 font-medium text-blue-400 border-b border-gray-700">
                   <a href="#" className="hover:underline">
                     {iface.name}
                   </a>
                 </td>
-                <td className="py-1.5 px-2 text-gray-600 border-b border-gray-100 font-mono text-xs">
+                <td className="py-1.5 px-2 text-gray-300 border-b border-gray-700 font-mono text-xs">
                   {iface.device}
                 </td>
-                <td className="py-1.5 px-2 text-gray-600 border-b border-gray-100 font-mono text-xs">
+                <td className="py-1.5 px-2 text-gray-300 border-b border-gray-700 font-mono text-xs">
                   {iface.address}
                 </td>
-                <td className="py-1.5 px-2 text-center border-b border-gray-100">
+                <td className="py-1.5 px-2 text-center border-b border-gray-700">
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                       iface.status === "up"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-200 text-gray-600"
+                        ? "bg-green-900 text-green-300"
+                        : "bg-gray-700 text-gray-300"
                     }`}
                   >
                     {iface.status}
                   </span>
                 </td>
-                <td className="py-1.5 px-2 text-right text-gray-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 text-right text-gray-300 border-b border-gray-700">
                   <div className="flex flex-col">
                     <span>{iface.packetsIn} pkts</span>
                     <span className="text-gray-400">{iface.bytesIn}</span>
                   </div>
                 </td>
-                <td className="py-1.5 px-2 text-right text-gray-600 border-b border-gray-100">
+                <td className="py-1.5 px-2 text-right text-gray-300 border-b border-gray-700">
                   <div className="flex flex-col">
                     <span>{iface.packetsOut} pkts</span>
                     <span className="text-gray-400">{iface.bytesOut}</span>

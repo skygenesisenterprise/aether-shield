@@ -5,36 +5,36 @@ import { Shield, FileText, GitBranch, Building } from "lucide-react";
 
 export default function LicensePage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gray-900 p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <Shield className="h-8 w-8 text-blue-600" />
-        <h1 className="text-3xl font-bold text-gray-900">License</h1>
+        <Shield className="h-8 w-8 text-blue-400" />
+        <h1 className="text-3xl font-bold text-gray-100">License</h1>
       </div>
 
       <div className="grid gap-6">
         {/* License Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+        <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+          <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+              <FileText className="h-5 w-5 text-blue-400" />
               License Overview
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-700">
+          <CardContent className="p-3 space-y-4">
+            <p className="text-gray-300">
               Aether Shield is licensed under the MIT License, an OSI-approved
               open source license that gives you the freedom to use, copy,
               modify, merge, publish, distribute, sublicense, and/or sell copies
               of the software.
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+              <p className="text-sm text-gray-200">
                 <strong>License Type:</strong> MIT License
               </p>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm text-gray-200">
                 <strong>Copyright:</strong> © 2025 Sky Genesis Enterprise
               </p>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm text-gray-200">
                 <strong>Approval:</strong> Open Source Initiative (OSI) Approved
               </p>
             </div>
@@ -42,12 +42,14 @@ export default function LicensePage() {
         </Card>
 
         {/* Full License Text */}
-        <Card>
-          <CardHeader>
-            <CardTitle>MIT License Text</CardTitle>
+        <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+          <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+            <CardTitle className="text-sm font-semibold text-gray-200">
+              MIT License Text
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="bg-gray-50 rounded-lg p-6 font-mono text-sm whitespace-pre-wrap">
+          <CardContent className="p-3">
+            <div className="bg-gray-800 rounded-lg p-6 font-mono text-sm text-gray-200 whitespace-pre-wrap">
               {`MIT License
 
 Copyright (c) 2025 Sky Genesis Enterprise
@@ -74,19 +76,19 @@ SOFTWARE.`}
         </Card>
 
         {/* Additional Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
+        <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+          <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+              <Building className="h-5 w-5 text-blue-400" />
               Additional Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-3 space-y-4">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-gray-100 mb-2">
                 What this means for you:
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-700">
+              <ul className="list-disc list-inside space-y-1 text-gray-300">
                 <li>
                   You can freely use Aether Shield for commercial and
                   non-commercial purposes
@@ -99,10 +101,10 @@ SOFTWARE.`}
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-gray-100 mb-2">
                 Requirements:
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-700">
+              <ul className="list-disc list-inside space-y-1 text-gray-300">
                 <li>Include the original copyright notice</li>
                 <li>Include the license text in copies of the software</li>
               </ul>
@@ -111,23 +113,31 @@ SOFTWARE.`}
         </Card>
 
         {/* Source Code */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GitBranch className="h-5 w-5" />
+        <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+          <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-200">
+              <GitBranch className="h-5 w-5 text-blue-400" />
               Source Code
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 mb-4">
+          <CardContent className="p-3">
+            <p className="text-gray-300 mb-4">
               The complete source code for Aether Shield is available for
               review, modification, and contribution.
             </p>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm font-mono text-gray-800">
-                Repository: Available in your local installation
+            <div className="bg-gray-800 rounded-lg p-4">
+              <p className="text-sm font-mono text-gray-200 mb-2">
+                Repository:
               </p>
-              <p className="text-sm font-mono text-gray-800">
+              <a
+                href="https://github.com/skygenesisenterprise/aether-shield"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 hover:underline break-all"
+              >
+                https://github.com/skygenesisenterprise/aether-shield
+              </a>
+              <p className="text-sm font-mono text-gray-200 mt-2">
                 License: MIT (see LICENSE file in repository root)
               </p>
             </div>

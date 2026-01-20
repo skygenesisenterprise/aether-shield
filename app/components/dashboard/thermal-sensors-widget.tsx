@@ -21,41 +21,52 @@ function getTemperatureColor(temp: number, max: number) {
 
 function getTemperatureTextColor(temp: number, max: number) {
   const percentage = (temp / max) * 100;
-  if (percentage < 50) return "text-green-700";
-  if (percentage < 75) return "text-yellow-700";
-  return "text-red-700";
+  if (percentage < 50) return "text-green-400";
+  if (percentage < 75) return "text-yellow-400";
+  return "text-red-400";
 }
 
 export function ThermalSensorsWidget() {
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardHeader className="bg-[#f5f5f5] py-2 px-3 border-b border-gray-200">
-        <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+    <Card className="border border-gray-700 bg-gray-900 shadow-sm">
+      <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
           <Thermometer className="h-4 w-4 text-orange-500" />
           Thermal Sensors
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-3">
-        <div className="space-y-3">
-          {sensors.map((sensor, index) => (
-            <div key={index}>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-600">{sensor.name}</span>
-                <span
-                  className={`text-xs font-medium ${getTemperatureTextColor(sensor.temp, sensor.max)}`}
-                >
-                  {sensor.temp}°C
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
-                <div
-                  className={`h-full ${getTemperatureColor(sensor.temp, sensor.max)} transition-all`}
-                  style={{ width: `${(sensor.temp / sensor.max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+      <CardContent className="p-0">
+        <table className="w-full text-xs">
+          <tbody>
+            {sensors.map((sensor, index) => (
+              <tr
+                key={index}
+                className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-800"}
+              >
+                <td className="py-1.5 px-3 font-medium text-gray-300 w-1/3 border-b border-gray-700">
+                  {sensor.name}
+                </td>
+                <td className="py-1.5 px-3 text-gray-200 border-b border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-700 rounded h-4 overflow-hidden">
+                      <div
+                        className={`h-full ${getTemperatureColor(sensor.temp, sensor.max)}`}
+                        style={{
+                          width: `${(sensor.temp / sensor.max) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    <span
+                      className={`text-xs w-16 ${getTemperatureTextColor(sensor.temp, sensor.max)}`}
+                    >
+                      {sensor.temp}°C
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </CardContent>
     </Card>
   );

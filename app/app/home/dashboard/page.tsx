@@ -8,14 +8,14 @@ import { ThermalSensorsWidget } from "@/components/dashboard/thermal-sensors-wid
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-900">
       <main className="p-4">
         {/* Dashboard Title */}
         <div className="mb-4">
-          <h1 className="text-xl font-semibold text-gray-700">
+          <h1 className="text-xl font-semibold text-gray-100">
             Aether Shield - Dashboard
           </h1>
-          <p className="text-sm text-gray-500">System overview and status</p>
+          <p className="text-sm text-gray-300">System overview and status</p>
         </div>
 
         {/* Dashboard Grid */}

@@ -623,8 +623,8 @@ function renderMenuItem(
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-between h-6 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:bg-gray-100",
-              isActive && "text-blue-600 hover:bg-blue-50",
+              "w-full justify-between h-6 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hover:bg-gray-800",
+              isActive && "text-blue-400 hover:bg-gray-800",
             )}
             style={{ marginLeft: `${marginLeft}px` }}
           >
@@ -657,8 +657,8 @@ function renderMenuItem(
       asChild
       variant="ghost"
       className={cn(
-        "w-full justify-between h-8 px-2 text-sm font-normal text-gray-700 hover:bg-gray-100",
-        isActive && "bg-blue-50 text-blue-700 hover:bg-blue-100",
+        "w-full justify-between h-8 px-2 text-sm font-normal text-gray-300 hover:bg-gray-800",
+        isActive && "bg-gray-800 text-blue-400 hover:bg-gray-700",
       )}
       style={{ marginLeft: `${marginLeft}px` }}
     >
@@ -668,7 +668,7 @@ function renderMenuItem(
       >
         <span className="flex items-center gap-2">
           {!item.icon && (
-            <span className="w-2 h-2 bg-gray-400 rounded-full shrink-0" />
+            <span className="w-2 h-2 bg-gray-600 rounded-full shrink-0" />
           )}
           <span className="truncate max-w-[140px]">{item.title}</span>
         </span>
@@ -719,8 +719,8 @@ function MenuItem({
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start gap-2 h-8 px-2 text-sm font-normal text-gray-700 hover:bg-gray-100",
-              isActive && "bg-blue-50 text-blue-700 hover:bg-blue-100",
+              "w-full justify-start gap-2 h-8 px-2 text-sm font-normal text-gray-300 hover:bg-gray-800",
+              isActive && "bg-gray-800 text-blue-400 hover:bg-gray-700",
             )}
             style={{ marginLeft: `${marginLeft}px` }}
           >
@@ -752,14 +752,14 @@ function MenuItem({
       asChild
       variant="ghost"
       className={cn(
-        "w-full justify-start gap-2 h-8 px-2 text-sm font-normal text-gray-700 hover:bg-gray-100",
-        isActive && "bg-blue-50 text-blue-700 hover:bg-blue-100",
+        "w-full justify-start gap-2 h-8 px-2 text-sm font-normal text-gray-300 hover:bg-gray-800",
+        isActive && "bg-gray-800 text-blue-400 hover:bg-gray-700",
       )}
       style={{ marginLeft: `${marginLeft}px` }}
     >
       <Link href={item.href}>
         {level > 0 ? (
-          <span className="w-2 h-2 bg-gray-400 rounded-full shrink-0" />
+          <span className="w-2 h-2 bg-gray-600 rounded-full shrink-0" />
         ) : (
           <item.icon className="h-4 w-4 shrink-0" />
         )}
@@ -786,9 +786,9 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-      <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        <h1 className="text-lg font-semibold text-gray-700">Aether Shield</h1>
+    <div className="flex h-full w-64 flex-col bg-gray-900 border-r border-gray-800">
+      <div className="flex h-14 items-center border-b border-gray-800 px-4">
+        <h1 className="text-lg font-semibold text-gray-200">Aether Shield</h1>
       </div>
       <nav className="flex-1 overflow-hidden p-2 space-y-1 hover:overflow-auto">
         {menuItems
