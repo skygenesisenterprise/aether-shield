@@ -788,7 +788,7 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
       <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        <h1 className="text-lg font-semibold text-gray-900">Aether Shield</h1>
+        <h1 className="text-lg font-semibold text-gray-700">Aether Shield</h1>
       </div>
       <nav className="flex-1 overflow-hidden p-2 space-y-1 hover:overflow-auto">
         {menuItems
