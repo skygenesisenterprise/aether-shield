@@ -1,8 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, Download, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Info,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  Play,
+  Pause,
+  RotateCw,
+} from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLiveData } from "@/hooks/use-live-data";
 
 interface GitHubRelease {
   tag_name: string;
@@ -10,6 +19,19 @@ interface GitHubRelease {
   published_at: string;
   html_url: string;
   prerelease: boolean;
+}
+
+interface SystemData {
+  cpuUsage: number;
+  memoryUsage: number;
+  swapUsage: number;
+  diskUsage: number;
+  stateTableSize: number;
+  stateTableCurrent: number;
+  stateTableMax: number;
+  mbufUsage: number;
+  loadAverage: string;
+  uptime: string;
 }
 
 export function SystemInformation() {
@@ -28,6 +50,63 @@ export function SystemInformation() {
     null,
   );
   const [currentVersion] = useState("24.7.10");
+
+  const generateSystemData = (): SystemData => {
+    const cpuUsage = Math.random() * 15 + 2;
+    const memoryUsage = Math.random() * 25 + 10;
+    const swapUsage = Math.random() * 5;
+    const diskUsage = Math.random() * 10 + 8;
+    const stateTableCurrent = Math.floor(Math.random() * 200 + 258);
+    const stateTableMax = 812000;
+    const stateTableSize = (stateTableCurrent / stateTableMax) * 100;
+    const mbufUsage = Math.random() * 3;
+    const load1 = (Math.random() * 0.5 + 0.05).toFixed(2);
+    const load5 = (Math.random() * 0.6 + 0.08).toFixed(2);
+    const load15 = (Math.random() * 0.4 + 0.07).toFixed(2);
+
+    const now = Date.now();
+    const uptimeSeconds = Math.floor(now / 1000) % 60;
+    const uptimeMinutes = Math.floor(now / 60000) % 60;
+    const uptimeHours = Math.floor(now / 3600000) % 24;
+    const uptime = `${uptimeHours.toString().padStart(2, "0")}:${uptimeMinutes.toString().padStart(2, "0")}:${uptimeSeconds.toString().padStart(2, "0")}`;
+
+    return {
+      cpuUsage: Math.round(cpuUsage * 10) / 10,
+      memoryUsage: Math.round(memoryUsage * 10) / 10,
+      swapUsage: Math.round(swapUsage * 10) / 10,
+      diskUsage: Math.round(diskUsage * 10) / 10,
+      stateTableSize: Math.round(stateTableSize * 100) / 100,
+      stateTableCurrent,
+      stateTableMax,
+      mbufUsage: Math.round(mbufUsage * 10) / 10,
+      loadAverage: `${load1}, ${load5}, ${load15}`,
+      uptime,
+    };
+  };
+
+  const initialSystemData: SystemData = {
+    cpuUsage: 3,
+    memoryUsage: 18,
+    swapUsage: 0,
+    diskUsage: 12,
+    stateTableSize: 0,
+    stateTableCurrent: 358,
+    stateTableMax: 812000,
+    mbufUsage: 0,
+    loadAverage: "0.08, 0.12, 0.09",
+    uptime: "00:12:34",
+  };
+
+  const {
+    data: systemData,
+    isPlaying,
+    toggle,
+    reset,
+  } = useLiveData<SystemData>({
+    generateData: generateSystemData,
+    interval: 2000,
+    initialData: initialSystemData,
+  });
 
   useEffect(() => {
     const now = new Date();
@@ -72,7 +151,6 @@ export function SystemInformation() {
 
       if (response.ok) {
         setUpdateStatus("installing");
-        // Le serveur gérera l'installation et redémarrera
       } else {
         setUpdateStatus("error");
       }
@@ -110,7 +188,7 @@ export function SystemInformation() {
     }
   };
 
-  const systemData = [
+  const systemInfo = [
     { label: "Name", value: "AetherShield.localdomain" },
     { label: "Version", value: "Aether Shield 24.7.10-amd64" },
     {
@@ -122,19 +200,44 @@ export function SystemInformation() {
         updateStatus === "available",
     },
     { label: "CPU Type", value: "Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz" },
-    { label: "CPU Usage", value: "3%", showBar: true, barValue: 3 },
-    { label: "Memory Usage", value: "18%", showBar: true, barValue: 18 },
-    { label: "SWAP Usage", value: "0%", showBar: true, barValue: 0 },
-    { label: "Disk Usage", value: "12%", showBar: true, barValue: 12 },
+    {
+      label: "CPU Usage",
+      value: `${systemData.cpuUsage}%`,
+      showBar: true,
+      barValue: systemData.cpuUsage,
+    },
+    {
+      label: "Memory Usage",
+      value: `${systemData.memoryUsage}%`,
+      showBar: true,
+      barValue: systemData.memoryUsage,
+    },
+    {
+      label: "SWAP Usage",
+      value: `${systemData.swapUsage}%`,
+      showBar: true,
+      barValue: systemData.swapUsage,
+    },
+    {
+      label: "Disk Usage",
+      value: `${systemData.diskUsage}%`,
+      showBar: true,
+      barValue: systemData.diskUsage,
+    },
     {
       label: "State table size",
-      value: "0% (358/812000)",
+      value: `${systemData.stateTableSize}% (${systemData.stateTableCurrent}/${systemData.stateTableMax})`,
       showBar: true,
-      barValue: 0,
+      barValue: systemData.stateTableSize,
     },
-    { label: "MBUF Usage", value: "0%", showBar: true, barValue: 0 },
-    { label: "Load average", value: "0.08, 0.12, 0.09" },
-    { label: "Uptime", value: "00:12:34" },
+    {
+      label: "MBUF Usage",
+      value: `${systemData.mbufUsage}%`,
+      showBar: true,
+      barValue: systemData.mbufUsage,
+    },
+    { label: "Load average", value: systemData.loadAverage },
+    { label: "Uptime", value: systemData.uptime },
     { label: "Current date/time", value: currentDateTime },
     { label: "Last config change", value: lastConfigChange },
   ];
@@ -142,15 +245,40 @@ export function SystemInformation() {
   return (
     <Card className="border border-gray-700 bg-gray-900 shadow-sm">
       <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
-        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
-          <Info className="h-4 w-4 text-orange-500" />
-          System Information
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 text-orange-500" />
+            System Information
+            <div
+              className={`w-2 h-2 rounded-full ${isPlaying ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggle}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="h-3 w-3" />
+              ) : (
+                <Play className="h-3 w-3" />
+              )}
+            </button>
+            <button
+              onClick={reset}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title="Reset"
+            >
+              <RotateCw className="h-3 w-3" />
+            </button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <table className="w-full text-xs">
           <tbody>
-            {systemData.map((item, index) => (
+            {systemInfo.map((item, index) => (
               <tr
                 key={index}
                 className={index % 2 === 0 ? "bg-gray-900" : "bg-gray-800"}

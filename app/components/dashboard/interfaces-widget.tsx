@@ -1,66 +1,193 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Network, ArrowDown, ArrowUp } from "lucide-react";
+import {
+  Network,
+  ArrowDown,
+  ArrowUp,
+  Play,
+  Pause,
+  RotateCw,
+} from "lucide-react";
+import { useLiveData } from "@/hooks/use-live-data";
 
-const interfaces = [
+interface InterfaceData {
+  name: string;
+  device: string;
+  address: string;
+  status: "up" | "down";
+  packetsIn: number;
+  packetsOut: number;
+  bytesIn: number;
+  bytesOut: number;
+  errorsIn: number;
+  errorsOut: number;
+}
+
+const generateInterfacesData = (): InterfaceData[] => {
+  return [
+    {
+      name: "WAN",
+      device: "em0",
+      address: "192.168.1.100",
+      status: "up",
+      packetsIn: Math.floor(Math.random() * 1000000) + 1000000,
+      packetsOut: Math.floor(Math.random() * 500000) + 500000,
+      bytesIn: Math.floor(Math.random() * 1000000000) + 1000000000,
+      bytesOut: Math.floor(Math.random() * 500000000) + 200000000,
+      errorsIn: Math.floor(Math.random() * 3),
+      errorsOut: 0,
+    },
+    {
+      name: "LAN",
+      device: "em1",
+      address: "10.0.0.1",
+      status: "up",
+      packetsIn: Math.floor(Math.random() * 2000000) + 4000000,
+      packetsOut: Math.floor(Math.random() * 1500000) + 3500000,
+      bytesIn: Math.floor(Math.random() * 2000000000) + 3500000000,
+      bytesOut: Math.floor(Math.random() * 1500000000) + 2500000000,
+      errorsIn: 0,
+      errorsOut: 0,
+    },
+    {
+      name: "OPT1",
+      device: "em2",
+      address: "172.16.0.1",
+      status: "up",
+      packetsIn: Math.floor(Math.random() * 100000) + 150000,
+      packetsOut: Math.floor(Math.random() * 50000) + 75000,
+      bytesIn: Math.floor(Math.random() * 100000000) + 100000000,
+      bytesOut: Math.floor(Math.random() * 50000000) + 40000000,
+      errorsIn: Math.floor(Math.random() * 3),
+      errorsOut: 0,
+    },
+    {
+      name: "OPT2",
+      device: "em3",
+      address: "—",
+      status: "down",
+      packetsIn: 0,
+      packetsOut: 0,
+      bytesIn: 0,
+      bytesOut: 0,
+      errorsIn: 0,
+      errorsOut: 0,
+    },
+  ];
+};
+
+const initialInterfacesData: InterfaceData[] = [
   {
     name: "WAN",
     device: "em0",
     address: "192.168.1.100",
     status: "up",
-    packetsIn: "1,234,567",
-    packetsOut: "987,654",
-    bytesIn: "1.2 GB",
-    bytesOut: "456 MB",
-    errorsIn: "0",
-    errorsOut: "0",
+    packetsIn: 1234567,
+    packetsOut: 987654,
+    bytesIn: 1200000000,
+    bytesOut: 456000000,
+    errorsIn: 0,
+    errorsOut: 0,
   },
   {
     name: "LAN",
     device: "em1",
     address: "10.0.0.1",
     status: "up",
-    packetsIn: "5,678,901",
-    packetsOut: "4,567,890",
-    bytesIn: "4.5 GB",
-    bytesOut: "3.2 GB",
-    errorsIn: "0",
-    errorsOut: "0",
+    packetsIn: 5678901,
+    packetsOut: 4567890,
+    bytesIn: 4500000000,
+    bytesOut: 3200000000,
+    errorsIn: 0,
+    errorsOut: 0,
   },
   {
     name: "OPT1",
     device: "em2",
     address: "172.16.0.1",
     status: "up",
-    packetsIn: "234,567",
-    packetsOut: "123,456",
-    bytesIn: "128 MB",
-    bytesOut: "64 MB",
-    errorsIn: "2",
-    errorsOut: "0",
+    packetsIn: 234567,
+    packetsOut: 123456,
+    bytesIn: 128000000,
+    bytesOut: 64000000,
+    errorsIn: 2,
+    errorsOut: 0,
   },
   {
     name: "OPT2",
     device: "em3",
     address: "—",
     status: "down",
-    packetsIn: "0",
-    packetsOut: "0",
-    bytesIn: "0 B",
-    bytesOut: "0 B",
-    errorsIn: "0",
-    errorsOut: "0",
+    packetsIn: 0,
+    packetsOut: 0,
+    bytesIn: 0,
+    bytesOut: 0,
+    errorsIn: 0,
+    errorsOut: 0,
   },
 ];
 
+const formatBytes = (bytes: number): string => {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+};
+
+const formatPackets = (packets: number): string => {
+  return packets.toLocaleString();
+};
+
 export function InterfacesWidget() {
+  const {
+    data: interfaces,
+    isPlaying,
+    toggle,
+    reset,
+  } = useLiveData<InterfaceData[]>({
+    generateData: generateInterfacesData,
+    interval: 1500,
+    initialData: initialInterfacesData,
+  });
+
   return (
     <Card className="border border-gray-700 bg-gray-900 shadow-sm">
       <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
-        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
-          <Network className="h-4 w-4 text-orange-500" />
-          Interfaces
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Network className="h-4 w-4 text-orange-500" />
+            Interfaces
+            <div
+              className={`w-2 h-2 rounded-full ${isPlaying ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggle}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="h-3 w-3" />
+              ) : (
+                <Play className="h-3 w-3" />
+              )}
+            </button>
+            <button
+              onClick={reset}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title="Reset"
+            >
+              <RotateCw className="h-3 w-3" />
+            </button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -123,14 +250,18 @@ export function InterfacesWidget() {
                 </td>
                 <td className="py-1.5 px-2 text-right text-gray-300 border-b border-gray-700">
                   <div className="flex flex-col">
-                    <span>{iface.packetsIn} pkts</span>
-                    <span className="text-gray-400">{iface.bytesIn}</span>
+                    <span>{formatPackets(iface.packetsIn)} pkts</span>
+                    <span className="text-gray-400">
+                      {formatBytes(iface.bytesIn)}
+                    </span>
                   </div>
                 </td>
                 <td className="py-1.5 px-2 text-right text-gray-300 border-b border-gray-700">
                   <div className="flex flex-col">
-                    <span>{iface.packetsOut} pkts</span>
-                    <span className="text-gray-400">{iface.bytesOut}</span>
+                    <span>{formatPackets(iface.packetsOut)} pkts</span>
+                    <span className="text-gray-400">
+                      {formatBytes(iface.bytesOut)}
+                    </span>
                   </div>
                 </td>
               </tr>

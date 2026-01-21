@@ -13,7 +13,7 @@ export default function DashboardPage() {
         {/* Dashboard Title */}
         <div className="mb-4">
           <h1 className="text-xl font-semibold text-gray-100">
-            Aether Shield - Dashboard
+            Home - Dashboard
           </h1>
           <p className="text-sm text-gray-300">System overview and status</p>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity } from "lucide-react";
+import { Activity, Play, Pause, RotateCw } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -11,9 +11,15 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { useLiveData } from "@/hooks/use-live-data";
 
-// Generate mock traffic data
-const generateTrafficData = () => {
+interface TrafficDataPoint {
+  time: string;
+  inbound: number;
+  outbound: number;
+}
+
+const generateTrafficData = (): TrafficDataPoint[] => {
   const data = [];
   const now = new Date();
   for (let i = 60; i >= 0; i--) {
@@ -24,22 +30,94 @@ const generateTrafficData = () => {
         minute: "2-digit",
         second: "2-digit",
       }),
-      inbound: Math.floor(Math.random() * 50 + 20),
-      outbound: Math.floor(Math.random() * 30 + 10),
+      inbound: 35,
+      outbound: 25,
     });
   }
   return data;
 };
 
-const trafficData = generateTrafficData();
+const generateUpdatedTrafficData = (
+  currentData?: TrafficDataPoint[],
+): TrafficDataPoint[] => {
+  const data = currentData || initialTrafficData;
+  const newData = [...data.slice(1)];
+  const now = new Date();
+  newData.push({
+    time: now.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }),
+    inbound: Math.floor(Math.random() * 50 + 20),
+    outbound: Math.floor(Math.random() * 30 + 10),
+  });
+  return newData;
+};
+
+const initialTrafficData: TrafficDataPoint[] = Array.from(
+  { length: 61 },
+  (_, i) => {
+    const time = new Date(Date.now() - (60 - i) * 1000);
+    return {
+      time: time.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+      inbound: 35,
+      outbound: 25,
+    };
+  },
+);
 
 export function TrafficGraphWidget() {
+  const {
+    data: trafficData,
+    isPlaying,
+    toggle,
+    reset,
+  } = useLiveData<TrafficDataPoint[]>({
+    generateData: (currentData?: TrafficDataPoint[]) =>
+      generateUpdatedTrafficData(currentData),
+    interval: 1000,
+    initialData: initialTrafficData,
+  });
+
+  const currentInbound = trafficData[trafficData.length - 1]?.inbound || 0;
+  const currentOutbound = trafficData[trafficData.length - 1]?.outbound || 0;
+
   return (
     <Card className="border border-gray-700 bg-gray-900 shadow-sm">
       <CardHeader className="bg-gray-800 py-2 px-3 border-b border-gray-700">
-        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-orange-500" />
-          Traffic Graph (WAN)
+        <CardTitle className="text-sm font-semibold text-gray-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-orange-500" />
+            Traffic Graph (WAN)
+            <div
+              className={`w-2 h-2 rounded-full ${isPlaying ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggle}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="h-3 w-3" />
+              ) : (
+                <Play className="h-3 w-3" />
+              )}
+            </button>
+            <button
+              onClick={reset}
+              className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+              title="Reset"
+            >
+              <RotateCw className="h-3 w-3" />
+            </button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3">
@@ -137,11 +215,11 @@ export function TrafficGraphWidget() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <span className="w-3 h-0.5 bg-green-500"></span>
-              <span>In: 45.2 Mb/s</span>
+              <span>In: {currentInbound} Mb/s</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="w-3 h-0.5 bg-blue-500"></span>
-              <span>Out: 23.8 Mb/s</span>
+              <span>Out: {currentOutbound} Mb/s</span>
             </div>
           </div>
           <span>Last 60 seconds</span>
