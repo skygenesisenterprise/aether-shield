@@ -11,7 +11,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const publicRoutes = ["/login", "/register", "/forgot", "/oauth"];
+const publicRoutes = ["/login", "/register", "/forgot", "/oauth", "/not-found"];
 
 const shouldShowSidebar = (pathname: string): boolean => {
   // Ne pas afficher la sidebar sur les pages d'authentification publiques
