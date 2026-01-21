@@ -1,4 +1,4 @@
-name: Aether Vault Node Release
+name: Aether Shield Node Release
 
 on:
   push:
@@ -93,7 +93,7 @@ jobs:
         working-directory: package/node
         run: |
           # Ajouter le scope temporairement pour GitHub Packages
-          jq '.name = "@skygenesisenterprise/aether-vault"' package.json > package.tmp.json
+          jq '.name = "@skygenesisenterprise/aether-shield"' package.json > package.tmp.json
           mv package.tmp.json package.json
 
       - name: Configure GitHub Packages authentication
@@ -123,8 +123,8 @@ jobs:
           # Aether Vault Node.js SDK v$VERSION
 
           ## 📦 Package Information
-          - **Package Name npmjs**: \`aether-vault\`
-          - **Package Name GitHub**: \`@skygenesisenterprise/aether-vault\`
+          - **Package Name npmjs**: \`aether-shield\`
+          - **Package Name GitHub**: \`@skygenesisenterprise/aether-shield\`
           - **Version**: v$VERSION
           - **Registry**: npm and GitHub Packages
 
@@ -132,12 +132,12 @@ jobs:
 
           ### From npm
           \`\`\`bash
-          npm install aether-vault
+          npm install aether-shield
           \`\`\`
 
           ### From GitHub Packages
           \`\`\`bash
-          npm install @skygenesisenterprise/aether-vault
+          npm install @skygenesisenterprise/aether-shield
           \`\`\`
 
           ## 📖 Quick Start

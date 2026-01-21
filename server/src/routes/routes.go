@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, servicesController *controllers.ServicesController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware, servicesMiddleware *middleware.ServicesMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, servicesController *controllers.ServicesController, databaseController *controllers.DatabaseController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware, servicesMiddleware *middleware.ServicesMiddleware, databaseMiddleware *middleware.DatabaseMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -383,6 +383,45 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 			services.GET("/ntp/status", servicesController.GetNTPStatus)
 			services.GET("/snmp/status", servicesController.GetSNMPStatus)
 			services.GET("/syslog/status", servicesController.GetSyslogStatus)
+		}
+
+		database := api.Group("/database")
+		{
+			database.Use(authMiddleware.RequireAuth())
+			database.Use(databaseMiddleware.RequireDatabaseAccess())
+
+			// Database Management
+			database.GET("/tables", databaseController.GetTables)
+			database.POST("/tables", databaseMiddleware.ValidateDatabaseJSON(), databaseController.CreateTable)
+			database.GET("/tables/:name", databaseController.GetTable)
+			database.PUT("/tables/:name", databaseMiddleware.ValidateDatabaseJSON(), databaseController.UpdateTable)
+			database.DELETE("/tables/:name", databaseController.DeleteTable)
+			database.GET("/schemas", databaseController.GetSchemas)
+			database.POST("/schemas", databaseMiddleware.ValidateDatabaseJSON(), databaseController.CreateSchema)
+			database.GET("/schemas/:name", databaseController.GetSchema)
+			database.DELETE("/schemas/:name", databaseController.DeleteSchema)
+
+			// Database Operations
+			database.GET("/queries", databaseController.GetQueries)
+			database.POST("/queries", databaseMiddleware.ValidateDatabaseJSON(), databaseController.CreateQuery)
+			database.GET("/queries/:id", databaseController.GetQuery)
+			database.DELETE("/queries/:id", databaseController.DeleteQuery)
+			database.POST("/export", databaseMiddleware.ValidateDatabaseJSON(), databaseController.ExportDatabase)
+			database.GET("/import", databaseController.GetImportStatus)
+			database.POST("/import", databaseMiddleware.ValidateDatabaseJSON(), databaseController.ImportDatabase)
+			database.GET("/backup", databaseController.GetBackupList)
+			database.POST("/backup", databaseMiddleware.ValidateDatabaseJSON(), databaseController.CreateBackup)
+			database.GET("/restore", databaseController.GetRestoreStatus)
+			database.POST("/restore", databaseMiddleware.ValidateDatabaseJSON(), databaseController.RestoreDatabase)
+
+			// Database Monitoring
+			database.GET("/status", databaseController.GetStatus)
+			database.GET("/performance", databaseController.GetPerformance)
+			database.GET("/connections", databaseController.GetConnections)
+			database.GET("/statistics", databaseController.GetStatistics)
+			database.GET("/logs", databaseController.GetLogs)
+			database.GET("/locks", databaseController.GetLocks)
+			database.GET("/slow-queries", databaseController.GetSlowQueries)
 		}
 	}
 }
