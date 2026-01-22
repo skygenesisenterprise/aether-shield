@@ -1,0 +1,924 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Authentication & Access Management
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  role        String   @default("user")
+  permissions String[] @default([])
+  disabled    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdActivities Activity[]
+  groups           GroupMember[]
+  sessions         Session[]
+
+  @@map("users")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members GroupMember[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id     String @id @default(cuid())
+  userId String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@map("group_members")
+}
+
+model Privilege {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String
+  capabilities String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("privileges")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  lastActivity DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Firewall Management
+model FirewallRule {
+  id          String   @id @default(cuid())
+  action      String
+  protocol    String
+  source      String
+  destination String
+  port        String?
+  description String?
+  enabled     Boolean  @default(true)
+  categoryId  String?
+  groupId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  category FirewallCategory? @relation(fields: [categoryId], references: [id])
+  group    FirewallGroup?    @relation(fields: [groupId], references: [id])
+  logs     FirewallLog[]
+
+  @@map("firewall_rules")
+}
+
+model FirewallAlias {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String
+  content     String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("firewall_aliases")
+}
+
+model FirewallCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rules FirewallRule[]
+
+  @@map("firewall_categories")
+}
+
+model FirewallGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rules FirewallRule[]
+
+  @@map("firewall_groups")
+}
+
+model FirewallLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  action    String
+  protocol  String
+  source    String
+  dest      String
+  interface String?
+  ruleName  String?
+  reason    String?
+  ruleId    String?
+
+  // Relations
+  rule FirewallRule? @relation(fields: [ruleId], references: [id])
+
+  @@map("firewall_logs")
+}
+
+model FirewallSession {
+  id        String   @id @default(cuid())
+  source    String
+  dest      String
+  protocol  String
+  state     String
+  duration  BigInt
+  packets   BigInt
+  bytes     BigInt
+  interface String?
+  rule      String?
+  startTime DateTime @default(now())
+
+  @@map("firewall_sessions")
+}
+
+// NAT Configuration
+model NatOneToOne {
+  id          String   @id @default(cuid())
+  externalIP  String   @unique
+  internalIP  String
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("nat_one_to_one")
+}
+
+model NatOutbound {
+  id          String   @id @default(cuid())
+  interface   String
+  source      String
+  translation String
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("nat_outbound")
+}
+
+model NatPortForward {
+  id           String   @id @default(cuid())
+  externalIP   String
+  externalPort String
+  internalIP   String
+  internalPort String
+  protocol     String
+  description  String?
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("nat_port_forward")
+}
+
+// Traffic Shaping
+model ShaperQueue {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  interface   String
+  bandwidth   String
+  priority    Int      @default(1)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rules ShaperRule[]
+
+  @@map("shaper_queues")
+}
+
+model ShaperRule {
+  id          String   @id @default(cuid())
+  queueId     String
+  source      String
+  destination String
+  protocol    String?
+  port        String?
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  queue ShaperQueue @relation(fields: [queueId], references: [id])
+
+  @@map("shaper_rules")
+}
+
+model ShaperPipe {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  bandwidth   String
+  delay       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("shaper_pipes")
+}
+
+// Network Interfaces
+model Interface {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String
+  status      String
+  ipAddress   String?
+  subnet      String?
+  mac         String?
+  gateway     String?
+  dns         String[] @default([])
+  description String?
+  mtu         Int?
+  speed       Int?
+  duplex      String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  assignments InterfaceAssignment[]
+  virtualIPs  VirtualIP[]
+  neighbors   InterfaceNeighbor[]
+  statistics  InterfaceStats[]
+
+  @@map("interfaces")
+}
+
+model InterfaceAssignment {
+  id        String   @id @default(cuid())
+  interface String
+  network   String
+  gateway   String?
+  priority  Int      @default(1)
+  weight    Int      @default(1)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  interfaceObj Interface @relation(fields: [interface], references: [id])
+
+  @@unique([interface, network])
+  @@map("interface_assignments")
+}
+
+model VirtualIP {
+  id        String   @id @default(cuid())
+  ipAddress String   @unique
+  subnet    String
+  interface String
+  type      String
+  password  String?
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  interfaceObj Interface @relation(fields: [interface], references: [id])
+
+  @@map("virtual_ips")
+}
+
+model InterfaceStats {
+  id        String   @id @default(cuid())
+  interface String
+  rxBytes   BigInt   @default(0)
+  rxPackets BigInt   @default(0)
+  rxErrors  BigInt   @default(0)
+  txBytes   BigInt   @default(0)
+  txPackets BigInt   @default(0)
+  txErrors  BigInt   @default(0)
+  collisions BigInt   @default(0)
+  timestamp DateTime @default(now())
+
+  // Relations
+  interfaceObj Interface @relation(fields: [interface], references: [id])
+
+  @@map("interface_stats")
+}
+
+model InterfaceNeighbor {
+  id        String   @id @default(cuid())
+  ipAddress String
+  mac       String?
+  interface String
+  state     String
+  reachable Boolean  @default(true)
+  lastSeen  DateTime @default(now())
+
+  // Relations
+  interfaceObj Interface @relation(fields: [interface], references: [id])
+
+  @@unique([interface, ipAddress])
+  @@map("interface_neighbors")
+}
+
+// VPN Management
+model OpenVPNInstance {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  description        String?
+  protocol           String   @default("udp")
+  port               Int
+  localPort          Int?
+  bindAddress        String?
+  deviceMode         String   @default("tun")
+  tunnelType         String?
+  tlsKeyUsage        String?
+  tcpObust4          Boolean  @default(false)
+  devNode            String?
+  cipher             String?
+  auth               String?
+  digest             String?
+  compression        String?
+  compressionFraming Boolean  @default(false)
+  topology           String?
+  ipv4Network        String?
+  ipv4Netmask        String?
+  ipv6Network        String?
+  ipv6Prefix         String?
+  verbosityLevel     Int      @default(3)
+  status             String   @default("stopped")
+  enabled            Boolean  @default(true)
+  authMode           String?
+  localGroup         String?
+  strictUserCN       Boolean  @default(false)
+  usernameAsCN       Boolean  @default(false)
+  tlsRemote          String?
+  tlsAuth            Boolean  @default(false)
+  tlsCrypt           Boolean  @default(false)
+  customOptions      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  clientOverwrites OpenVPNClientOverwrite[]
+  logs             VPNLog[]
+
+  @@map("openvpn_instances")
+}
+
+model OpenVPNClientOverwrite {
+  id          String   @id @default(cuid())
+  instanceId  String
+  client      String
+  options     String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  instance OpenVPNInstance @relation(fields: [instanceId], references: [id])
+
+  @@unique([instanceId, client])
+  @@map("openvpn_client_overwrites")
+}
+
+model WireGuardInstance {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  description         String?
+  listenPort          Int
+  privateKey          String
+  publicKey           String
+  dns                 String?
+  allowedIPs          String?
+  endpoint            String?
+  persistentKeepalive Int?
+  table               String?
+  fwMark              String?
+  mtu                 Int?
+  status              String   @default("stopped")
+  enabled             Boolean  @default(true)
+  customOptions       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  peers WireGuardPeer[]
+  logs  VPNLog[]
+
+  @@map("wireguard_instances")
+}
+
+model WireGuardPeer {
+  id                  String    @id @default(cuid())
+  instanceId          String
+  publicKey           String    @unique
+  allowedIPs          String?
+  endpoint            String?
+  persistentKeepalive Int?
+  presharedKey        String?
+  description         String?
+  enabled             Boolean   @default(true)
+  lastHandshake       DateTime?
+  rxBytes             BigInt    @default(0)
+  txBytes             BigInt    @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  instance WireGuardInstance @relation(fields: [instanceId], references: [id])
+
+  @@map("wireguard_peers")
+}
+
+model IPSecConnection {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String?
+  protocol          String   @default("ikev2")
+  localID           String?
+  remoteID          String?
+  localGateway      String?
+  remoteGateway     String?
+  localSubnet       String?
+  remoteSubnet      String?
+  encryption        String?
+  integrity         String?
+  dhGroup           String?
+  ikeVersion        String   @default("ikev2")
+  phase1Lifetime    Int?
+  phase2Lifetime    Int?
+  dpd               Boolean  @default(true)
+  dpdDelay          Int?
+  dpdTimeout        Int?
+  natTraversal      Boolean  @default(true)
+  mobility          Boolean  @default(false)
+  deadPeerDetection Boolean  @default(true)
+  enabled           Boolean  @default(true)
+  status            String   @default("disconnected")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  leases IPSecLease[]
+  logs   VPNLog[]
+
+  @@map("ipsec_connections")
+}
+
+model IPSecSettings {
+  id                String   @id @default(cuid())
+  enable            Boolean  @default(false)
+  interface         String?
+  listenPort        Int?
+  ikeLifetime       Int?
+  mobileUsers       Boolean  @default(false)
+  acceptMobileUsers Boolean  @default(false)
+  userSource        String?
+  groupSource       String?
+  backend           String?
+  autoGenerate      Boolean  @default(false)
+  customOptions     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("ipsec_settings")
+}
+
+model IPSecPreSharedKey {
+  id           String   @id @default(cuid())
+  identifier   String   @unique
+  preSharedKey String
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("ipsec_pre_shared_keys")
+}
+
+model IPSecKeyPair {
+  id         String   @id @default(cuid())
+  type       String
+  publicKey  String
+  privateKey String
+  keySize    Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("ipsec_key_pairs")
+}
+
+model IPSecLease {
+  id           String   @id @default(cuid())
+  username     String
+  ipAddress    String
+  connectionId String
+  loginTime    DateTime @default(now())
+  lastActivity DateTime @default(now())
+
+  // Relations
+  connection IPSecConnection @relation(fields: [connectionId], references: [id])
+
+  @@unique([connectionId, username])
+  @@map("ipsec_leases")
+}
+
+model VPNLog {
+  id           String   @id @default(cuid())
+  service      String
+  level        String
+  message      String
+  timestamp    DateTime @default(now())
+  instanceId   String?
+  openvpnId    String?
+  wireguardId  String?
+  ipsecId      String?
+
+  // Relations
+  openvpnInstance   OpenVPNInstance?   @relation(fields: [openvpnId], references: [id])
+  wireguardInstance WireGuardInstance? @relation(fields: [wireguardId], references: [id])
+  ipsecConnection   IPSecConnection?   @relation(fields: [ipsecId], references: [id])
+
+  @@map("vpn_logs")
+}
+
+// System Management
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  userId    String?
+  timestamp DateTime @default(now())
+  details   Json?
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("activities")
+}
+
+model Statistics {
+  id        String   @id @default(cuid())
+  cpu       Float    @default(0)
+  memory    BigInt   @default(0)
+  disk      BigInt   @default(0)
+  network   BigInt   @default(0)
+  uptime    BigInt   @default(0)
+  processes Int      @default(0)
+  timestamp DateTime @default(now())
+
+  @@map("statistics")
+}
+
+model BackupConfig {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  enabled     Boolean  @default(true)
+  schedule    String?
+  location    String
+  retention   Int      @default(7)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("backup_configs")
+}
+
+model ConfigHistory {
+  id        String   @id @default(cuid())
+  section   String
+  changes   String
+  author    String?
+  timestamp DateTime @default(now())
+  version   String?
+
+  @@map("config_history")
+}
+
+model GatewayConfig {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  type      String
+  enabled   Boolean  @default(true)
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("gateway_configs")
+}
+
+model GatewayGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  gateways  String[] @default([])
+  strategy  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("gateway_groups")
+}
+
+model RouteConfig {
+  id          String   @id @default(cuid())
+  network     String
+  gateway     String?
+  interface   String?
+  metric      Int?
+  type        String?
+  enabled     Boolean  @default(true)
+  description String?
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([network, gateway])
+  @@map("route_configs")
+}
+
+// Certificates & Trust
+model CertificateAuthority {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  keyLength    Int      @default(2048)
+  lifetime     Int      @default(3650)
+  country      String?
+  state        String?
+  city         String?
+  organization String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  certificates Certificate[]
+
+  @@map("certificate_authorities")
+}
+
+model Certificate {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  description      String?
+  caId             String
+  commonName       String
+  alternativeNames String[] @default([])
+  keyLength        Int      @default(2048)
+  lifetime         Int      @default(365)
+  usageType        String?
+  status           String   @default("pending")
+  issuedAt         DateTime @default(now())
+  expiresAt        DateTime
+
+  // Relations
+  ca CertificateAuthority @relation(fields: [caId], references: [id])
+
+  @@map("certificates")
+}
+
+model Revocation {
+  id            String   @id @default(cuid())
+  certificateId String
+  reason        String?
+  revokedAt     DateTime @default(now())
+  revokedBy     String?
+
+  @@unique([certificateId])
+  @@map("revocations")
+}
+
+// Settings
+model AdminSettings {
+  id         String   @id @default(cuid())
+  language   String   @default("en")
+  theme      String   @default("light")
+  timezone   String   @default("UTC")
+  dateFormat String   @default("Y-m-d")
+  timeFormat String   @default("H:i:s")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("admin_settings")
+}
+
+model GeneralSettings {
+  id        String   @id @default(cuid())
+  hostname  String   @unique
+  domain    String?
+  dns       String[] @default([])
+  ntp       String[] @default([])
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("general_settings")
+}
+
+model LoggingSettings {
+  id            String   @id @default(cuid())
+  level         String   @default("info")
+  syslog        Boolean  @default(false)
+  syslogServer  String?
+  syslogPort    Int?
+  remoteLogging Boolean  @default(false)
+  logFile       String?
+  maxSize       BigInt   @default(10485760)
+  maxFiles      Int      @default(5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("logging_settings")
+}
+
+model CronJob {
+  id          String   @id @default(cuid())
+  command     String
+  schedule    String
+  description String?
+  enabled     Boolean  @default(true)
+  lastRun     DateTime?
+  nextRun     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cron_jobs")
+}
+
+model Server {
+  id        String   @id @default(cuid())
+  hostname  String   @unique
+  ipAddress String   @unique
+  port      Int?
+  protocol  String   @default("http")
+  status    String   @default("unknown")
+  lastSync  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("servers")
+}
+
+model Tester {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  ipAddress String   @unique
+  port      Int?
+  status    String   @default("unknown")
+  lastTest  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("testers")
+}
+
+model Package {
+  name      String   @id
+  version   String
+  status    String   @default("unknown")
+  size      BigInt?
+  installed DateTime @default(now())
+  updated   DateTime @default(now())
+
+  @@map("packages")
+}
+
+model Plugin {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  version String
+  status  String   @default("disabled")
+  enabled Boolean  @default(false)
+  config  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("plugins")
+}
+
+model Changelog {
+  version     String   @id
+  date        DateTime @default(now())
+  changes     String[] @default([])
+  type        String?
+  downloadUrl String?
+
+  @@map("changelogs")
+}
+
+model FirmwareSettings {
+  id            String   @id @default(cuid())
+  autoUpdate    Boolean  @default(false)
+  updateChannel String   @default("stable")
+  backupOnUpdate Boolean  @default(true)
+  schedule      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("firmware_settings")
+}
+
+model FirmwareStatus {
+  id              String   @id @default(cuid())
+  currentVersion  String
+  availableUpdate String?
+  lastUpdate      DateTime?
+  nextCheck       DateTime?
+  status          String   @default("unknown")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("firmware_status")
+}
+
+model HASettings {
+  enabled       Boolean  @default(false)
+  nodeId        String   @unique
+  peerNodeIp    String?
+  syncInterface String?
+  virtualIp     String?
+  password      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("ha_settings")
+}
+
+model HAStatus {
+  id         String   @id @default(cuid())
+  enabled    Boolean  @default(false)
+  state      String   @default("unknown")
+  nodeId     String?
+  peerNodeId String?
+  lastSync   DateTime?
+  syncStatus String   @default("unknown")
+  virtualIp  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("ha_status")
+}
+
+model TrustSettings {
+  id          String  @id @default(cuid())
+  autoCRL     Boolean @default(false)
+  crlInterval Int     @default(86400)
+  ocsp        Boolean @default(false)
+  strictMode  Boolean @default(false)
+
+  @@map("trust_settings")
+}
+
+model Tunable {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  value       Json?
+  defaultValue Json?
+  description String?
+  type        String?
+  module      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tunables")
+}

@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aether-shield-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aether_shield
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aether-shield-prisma-studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/aether_shield
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:

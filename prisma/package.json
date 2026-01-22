@@ -1,0 +1,29 @@
+{
+  "name": "@aether-shield/prisma",
+  "version": "1.0.0",
+  "description": "Prisma Client for database access",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "prisma": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  },
+  "keywords": [
+    "prisma",
+    "database",
+    "orm",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT"
+}
