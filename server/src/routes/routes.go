@@ -6,7 +6,7 @@ import (
 	"github.com/skygenesisenterprise/aether-shield/server/src/middleware"
 )
 
-func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, servicesController *controllers.ServicesController, databaseController *controllers.DatabaseController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware, servicesMiddleware *middleware.ServicesMiddleware, databaseMiddleware *middleware.DatabaseMiddleware) {
+func SetupRoutes(router *gin.Engine, authController *controllers.AuthController, homeController *controllers.HomeController, systemController *controllers.SystemController, interfaceController *controllers.InterfaceController, firewallController *controllers.FirewallController, vpnController *controllers.VPNController, servicesController *controllers.ServicesController, databaseController *controllers.DatabaseController, routersController *controllers.RouterController, authMiddleware *middleware.AuthMiddleware, homeMiddleware *middleware.HomeMiddleware, systemMiddleware *middleware.SystemMiddleware, interfaceMiddleware *middleware.InterfaceMiddleware, firewallMiddleware *middleware.FirewallMiddleware, vpnMiddleware *middleware.VPNMiddleware, servicesMiddleware *middleware.ServicesMiddleware, databaseMiddleware *middleware.DatabaseMiddleware, routersMiddleware *middleware.RouterMiddleware) {
 	api := router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")
@@ -422,6 +422,58 @@ func SetupRoutes(router *gin.Engine, authController *controllers.AuthController,
 			database.GET("/logs", databaseController.GetLogs)
 			database.GET("/locks", databaseController.GetLocks)
 			database.GET("/slow-queries", databaseController.GetSlowQueries)
+		}
+
+		routers := api.Group("/routers")
+		{
+			routers.Use(authMiddleware.RequireAuth())
+			routers.Use(routersMiddleware.ValidateRouterAccess())
+
+			// Router Management
+			routers.GET("", routersController.GetRouters)
+			routers.POST("", routersMiddleware.ValidateRouterJSON(), routersController.CreateRouter)
+			routers.GET("/:id", routersController.GetRouter)
+			routers.PUT("/:id", routersMiddleware.ValidateRouterJSON(), routersController.UpdateRouter)
+			routers.DELETE("/:id", routersController.DeleteRouter)
+
+			// Router Status
+			routers.GET("/:id/status", routersController.GetRouterStatus)
+
+			// Router Configuration
+			routers.GET("/:id/config", routersController.GetRouterConfig)
+			routers.PUT("/:id/config", routersMiddleware.ValidateRouterConfig(), routersController.UpdateRouterConfig)
+
+			// Router Logs
+			routers.GET("/:id/log", routersController.GetRouterLog)
+
+			// Router Interfaces
+			routers.GET("/:id/interfaces", routersController.GetRouterInterfaces)
+
+			// Router Routes
+			routers.GET("/:id/routes", routersController.GetRouterRoutes)
+
+			// Router Services
+			routers.GET("/:id/services", routersController.GetRouterServices)
+
+			// Router Firewall
+			routers.GET("/:id/firewall", routersController.GetRouterFirewall)
+
+			// Router VPN
+			routers.GET("/:id/vpn", routersController.GetRouterVPN)
+
+			// Router Statistics
+			routers.GET("/:id/statistics", routersController.GetRouterStatistics)
+
+			// Router Commands
+			routers.POST("/:id/commands", routersMiddleware.ValidateRouterCommand(), routersController.ExecuteRouterCommand)
+
+			// Router Diagnostics
+			routers.GET("/:id/diagnostics", routersController.GetRouterDiagnostics)
+
+			// Router Backup
+			routers.GET("/:id/backup", routersController.GetRouterBackup)
+			routers.POST("/:id/backup", routersMiddleware.ValidateRouterBackup(), routersController.CreateRouterBackup)
+			routers.POST("/:id/restore", routersMiddleware.ValidateRouterBackup(), routersController.RestoreRouterBackup)
 		}
 	}
 }

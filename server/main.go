@@ -63,6 +63,7 @@ func main() {
 	interfaceService := services.NewInterfaceService()
 	firewallService := services.NewFirewallService()
 	vpnService := services.NewVPNService(cfg.Database)
+	routersService := services.NewRouterService()
 	databaseService := services.NewDatabaseService(cfg.Database)
 
 	authController := controllers.NewAuthController(authService)
@@ -71,6 +72,7 @@ func main() {
 	interfaceController := controllers.NewInterfaceController(interfaceService)
 	firewallController := controllers.NewFirewallController(firewallService)
 	vpnController := controllers.NewVPNController(vpnService)
+	routersController := controllers.NewRouterController(routersService)
 	servicesController := controllers.NewServicesController()
 	databaseController := controllers.NewDatabaseController(databaseService)
 
@@ -80,6 +82,7 @@ func main() {
 	interfaceMiddleware := middleware.NewInterfaceMiddleware()
 	firewallMiddleware := middleware.NewFirewallMiddleware()
 	vpnMiddleware := middleware.NewVPNMiddleware()
+	routersMiddleware := middleware.NewRouterMiddleware()
 	servicesMiddleware := middleware.NewServicesMiddleware()
 	databaseMiddleware := middleware.NewDatabaseMiddleware(cfg.JWTSecret)
 
@@ -92,7 +95,7 @@ func main() {
 	// Disable Gin debug output
 	gin.DefaultWriter = io.Discard
 
-	routes.SetupRoutes(router, authController, homeController, systemController, interfaceController, firewallController, vpnController, servicesController, databaseController, authMiddleware, homeMiddleware, systemMiddleware, interfaceMiddleware, firewallMiddleware, vpnMiddleware, servicesMiddleware, databaseMiddleware)
+	routes.SetupRoutes(router, authController, homeController, systemController, interfaceController, firewallController, vpnController, servicesController, databaseController, routersController, authMiddleware, homeMiddleware, systemMiddleware, interfaceMiddleware, firewallMiddleware, vpnMiddleware, servicesMiddleware, databaseMiddleware, routersMiddleware)
 
 	port := os.Getenv("PORT")
 	if port == "" {
