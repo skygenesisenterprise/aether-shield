@@ -1,0 +1,36 @@
+{
+  "name": "@aether-shield/messages",
+  "version": "1.0.0",
+  "description": "Internationalization package for Aether Shield messages",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./locales/*": "./locales/*"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "i18next": "^23.0.0",
+    "react-i18next": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/i18next": "^13.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}

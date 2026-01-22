@@ -1,0 +1,117 @@
+# Aether Shield i18n - Docker Compose
+# Configuration for running the internationalization system
+
+version: "3.8"
+
+services:
+  # ============================================
+  # i18n Service (Next.js Application)
+  # ============================================
+  i18n:
+    build:
+      context: .
+      target: runner
+      dockerfile: Dockerfile
+    container_name: aether-shield-i18n
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://api:8080
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    volumes:
+      - ./public/locales:/app/public/locales
+      - ./.env.production:/app/.env
+    networks:
+      - aether-shield-network
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # API Service (Optional - if needed)
+  # ============================================
+  api:
+    image: node:18-alpine
+    container_name: aether-shield-i18n-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@db:5432/i18n
+    volumes:
+      - ./api:/app
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    networks:
+      - aether-shield-network
+    depends_on:
+      - db
+
+  # ============================================
+  # Database Service (Optional - if needed)
+  # ============================================
+  db:
+    image: postgres:14-alpine
+    container_name: aether-shield-i18n-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=i18n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - aether-shield-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d i18n"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Development Service (Optional)
+  # ============================================
+  i18n-dev:
+    build:
+      context: .
+      target: dev
+      dockerfile: Dockerfile
+    container_name: aether-shield-i18n-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229" # Debug port
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://api:8080
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - aether-shield-network
+    command: pnpm dev
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  aether-shield-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
