@@ -1,8 +1,64 @@
-# Aether Vault - Docker Architecture
-# Next.js (port 3000 public) + Caddy reverse proxy interne pour API vers backend (port 8080)
+# SERVICES INTERNES (Non exposés publiquement)
+# Backend Go (interne uniquement)
+# ========================================
+:8080 {
+    bind 127.0.0.1
+    respond "Backend service running" 200
+}
+=======
+# ========================================
+# SERVICES INTERNES (Non exposés publiquement)
+# Backend Go (interne uniquement)
+# ========================================
+:8080 {
+    bind 127.0.0.1
+    respond "Backend service running" 200
+}
+
+# ========================================
+# SERVICES INTERNES ADDITIONNELS
+# Pour d'autres services internes
+# ========================================
+:5555 {
+    bind 127.0.0.1
+    respond "Internal service running" 200
+}Aether Shield - Docker Architecture
+# Next.js (port 3000 public) + Caddy reverse proxy interne pour API vers backend (port 8080, 5555, etc.)
 
 {
-    # Configuration globale
+    # FRONTEND SPA - Next.js
+    # Toutes les autres routes vers le serveur Next.js
+    # ====================================
+    handle /* {
+        reverse_proxy 127.0.0.1:3001
+    }
+=======
+    # ====================================
+    # ROUTES API ADDITIONNELLES
+    # Pour d'autres services internes (5555, etc.)
+    # ====================================
+    handle /internal/* {
+        # Reverse proxy vers d'autres services internes
+        reverse_proxy 127.0.0.1:5555 {
+            health_uri /health
+            health_interval 30s
+            health_timeout 5s
+            health_status 200
+
+            header_up Host {http.request.host}
+            header_up X-Real-IP {http.request.remote_host}
+            header_up X-Forwarded-For {http.request.remote_host}
+            header_up X-Forwarded-Proto {http.request.scheme}
+        }
+    }
+
+    # ====================================
+    # FRONTEND SPA - Next.js
+    # Toutes les autres routes vers le serveur Next.js
+    # ====================================
+    handle /* {
+        reverse_proxy 127.0.0.1:3001
+    }Configuration globale
     admin localhost:2019
     auto_https off
 
