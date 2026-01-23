@@ -5,7 +5,6 @@ packages:
   - "options"
   - "snap"
   - "prisma"
-  - "package/node"
   - "package/github"
   - "package/vscode"
   - "package/cli/web"
