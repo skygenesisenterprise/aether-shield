@@ -1,0 +1,75 @@
+# Docker Compose for Development Environment
+#
+# This configuration is optimized for local development with:
+# - Hot reloading
+# - Volume mounting for code changes
+# - Port forwarding
+# - Environment variables for development
+# - Single public port (3000)
+#
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.dev
+    container_name: aether-shield-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000" # Public port for Next.js
+      - "8080:8080" # Internal port for Go server
+    volumes:
+      - ../..:/app
+      - /app/node_modules
+      - /app/app/.next
+      - /app/app/node_modules
+      - /app/server/src
+      - /app/prisma
+      - /tmp/aether-shield-server
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aether_shield?schema=public
+    networks:
+      - aether-shield-dev
+    depends_on:
+      - db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:15-alpine
+    container_name: aether-shield-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=aether_shield
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Internal port for database
+    networks:
+      - aether-shield-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  aether-shield-dev:
+    driver: bridge

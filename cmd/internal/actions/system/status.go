@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/skygenesisenterprise/aether-shield/cmd/internal/context"
-	"github.com/skygenesisenterprise/aether-shield/cmd/internal/menu/types"
 	"github.com/skygenesisenterprise/aether-shield/cmd/internal/ui/theme"
 )
 

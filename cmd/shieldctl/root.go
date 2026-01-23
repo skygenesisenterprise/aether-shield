@@ -24,6 +24,7 @@ func NewRootCommand(ctx *context.Context) *cobra.Command {
 
 	// Ajouter les sous-commandes
 	cmd.AddCommand(newVersionCommand())
+	cmd.AddCommand(newAuthCommand())
 	cmd.AddCommand(newStatusCommand(ctx))
 	cmd.AddCommand(newServiceCommand(ctx))
 	cmd.AddCommand(newNetworkCommand(ctx))

@@ -1,11 +1,15 @@
-# Aether Vault - Comprehensive Makefile
-# Enterprise-Grade Secrets Management Platform
+# Aether Shield - Comprehensive Makefile
+# Enterprise-Grade Network Security Platform
 
 .PHONY: help install clean reset dev build start test lint format typecheck
 .PHONY: quick-start status health docker db db-migrate db-studio db-seed
 .PHONY: go-server go-build go-test go-clean go-install-deps go-secrets
 .PHONY: packages packages-dev packages-build packages-test
 .PHONY: github-app golang-sdk nodejs-sdk python-sdk
+.PHONY: docker-build docker-build-dev docker-run docker-run-dev docker-stop
+.PHONY: docker-logs docker-shell docker-clean docker-clean-all docker-version
+.PHONY: docker-up docker-down docker-rebuild
+.PHONY: version-packages changeset monitoring monitoring-stop security-scan docs-serve ci
 
 # Default target
 .DEFAULT_GOAL := help
@@ -16,6 +20,9 @@ NODE_VERSION := 18.0.0
 GO_VERSION := 1.21
 PORT_FRONTEND := 3000
 PORT_BACKEND := 8080
+DOCKERFILE := infrastructure/docker/Dockerfile
+DOCKER_COMPOSE := docker-compose
+DOCKER := docker
 
 # Colors for output
 BLUE := \033[36m
@@ -26,7 +33,7 @@ RESET := \033[0m
 
 ## 🚀 Quick Start & Development
 help: ## Show all available commands
-	@echo "$(BLUE)🔐 Aether Vault - Enterprise Secrets Management$(RESET)"
+	@echo "$(BLUE)🛡️  Aether Shield - Enterprise Network Security$(RESET)"
 	@echo ""
 	@echo "$(GREEN)🚀 Quick Start:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / && /Quick Start/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -56,7 +63,7 @@ help: ## Show all available commands
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / && /Utilities/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 quick-start: ## Quick Start - Install, migrate, and start dev servers
-	@echo "$(BLUE)🚀 Quick Start - Aether Vault$(RESET)"
+	@echo "$(BLUE)🚀 Quick Start - Aether Shield$(RESET)"
 	@echo "$(YELLOW)Installing dependencies...$(RESET)"
 	@$(MAKE) install
 	@echo "$(YELLOW)Setting up environment...$(RESET)"
@@ -204,25 +211,67 @@ go-secrets: ## Go - Generate JWT and encryption secrets for .env.example
 	@echo "$(YELLOW)Encryption Key: $$(grep VAULT_SECURITY_ENCRYPTION_KEY server/.env.example | cut -d'=' -f2)$(RESET)"
 
 ## 🐳 Docker Commands
-docker-build: ## Docker - Build Docker image
-	@echo "$(BLUE)🐳 Building Docker image...$(RESET)"
-	@$(PNPM) docker:build
+docker-build: ## Docker - Build development image with hot-reload
+	@echo "$(BLUE)🏗️  Building Aether Shield development image...$(RESET)"
+	@$(DOCKER) build -t aether-shield-dev -f $(DOCKERFILE) .
+	@echo "$(GREEN)✅ Development image built: aether-shield-dev$(RESET)"
 
-docker-run: ## Docker - Run Docker containers
-	@echo "$(BLUE)🐳 Starting Docker containers...$(RESET)"
-	@$(PNPM) docker:run
+docker-run: ## Docker - Run development container with hot-reload
+	@echo "$(BLUE)🐳  Starting Aether Shield development container...$(RESET)"
+	@$(DOCKER) run -it --rm -p 3000:3000 -p 8080:8080 -v $(PWD):/app -v /app/node_modules aether-shield-dev
+	@echo "$(GREEN)✅ Aether Shield running in development mode with hot-reload$(RESET)"
+	@echo "$(GREEN)✅ Frontend: http://localhost:3000$(RESET)"
+	@echo "$(GREEN)✅ Backend API: http://localhost:8080$(RESET)"
 
-docker-stop: ## Docker - Stop Docker containers
-	@echo "$(BLUE)🛑 Stopping Docker containers...$(RESET)"
-	@$(PNPM) docker:stop
+docker-run-detached: ## Docker - Run development container in detached mode
+	@echo "$(BLUE)🐳  Starting Aether Shield development container in detached mode...$(RESET)"
+	@$(DOCKER) run -d --name aether-shield-dev -p 3000:3000 -p 8080:8080 -v $(PWD):/app -v /app/node_modules aether-shield-dev
+	@echo "$(GREEN)✅ Aether Shield running in detached mode$(RESET)"
 
-docker-dev: ## Docker - Start development environment
-	@echo "$(BLUE)🐳 Starting development Docker environment...$(RESET)"
-	@docker-compose -f docker-compose.dev.yml up -d
+docker-stop: ## Docker - Stop development container
+	@echo "$(BLUE)🛑 Stopping Aether Shield development container...$(RESET)"
+	@$(DOCKER) stop aether-shield-dev
+	@$(DOCKER) rm aether-shield-dev
+	@echo "$(GREEN)✅ Container stopped and removed$(RESET)"
 
-docker-prod: ## Docker - Start production environment
-	@echo "$(BLUE)🐳 Starting production Docker environment...$(RESET)"
-	@docker-compose up -d
+docker-logs: ## Docker - Show development container logs
+	@echo "$(BLUE)📝 Showing Aether Shield development container logs...$(RESET)"
+	@$(DOCKER) logs -f aether-shield-dev
+
+docker-shell: ## Docker - Get shell in running container
+	@echo "$(BLUE)🐚 Opening shell in Aether Shield container...$(RESET)"
+	@$(DOCKER) exec -it aether-shield-dev sh
+
+docker-up: ## Docker - Start development environment with Docker Compose
+	@echo "$(BLUE)🐳  Starting Aether Shield development environment with Docker Compose...$(RESET)"
+	@cd infrastructure/docker && $(DOCKER_COMPOSE) -f docker-compose.dev.yml up --build
+
+docker-down: ## Docker - Stop development environment
+	@echo "$(BLUE)🛑 Stopping Aether Shield development environment...$(RESET)"
+	@cd infrastructure/docker && $(DOCKER_COMPOSE) -f docker-compose.dev.yml down
+
+docker-rebuild: ## Docker - Rebuild and restart development environment
+	@echo "$(BLUE)🔄 Rebuilding Aether Shield development environment...$(RESET)"
+	@cd infrastructure/docker && $(DOCKER_COMPOSE) -f docker-compose.dev.yml down -v
+	@cd infrastructure/docker && $(DOCKER_COMPOSE) -f docker-compose.dev.yml up --build --force-recreate
+
+docker-clean: ## Docker - Clean all Docker artifacts
+	@echo "$(BLUE)🧹 Cleaning Docker artifacts...$(RESET)"
+	@$(DOCKER) system prune -f
+	@echo "$(GREEN)✅ Cleanup completed$(RESET)"
+
+docker-clean-all: ## Docker - Remove all Aether Shield development resources
+	@echo "$(BLUE)🧹 Removing all Aether Shield development Docker resources...$(RESET)"
+	@$(DOCKER) rm -f aether-shield-dev 2>/dev/null || true
+	@$(DOCKER) rmi -f aether-shield-dev 2>/dev/null || true
+	@echo "$(GREEN)✅ All resources removed$(RESET)"
+
+docker-version: ## Docker - Show version information
+	@echo "$(BLUE)📋 Aether Shield Infrastructure - Version Information$(RESET)"
+	@echo "$(GREEN)Docker version:$(RESET) $(shell docker --version)"
+	@echo "$(GREEN)Docker Compose version:$(RESET) $(shell docker-compose --version)"
+	@echo "$(GREEN)Available images:$(RESET)"
+	@$(DOCKER) images | grep aether-shield || echo "  No Aether Shield images found"
 
 ## 🔧 Code Quality
 lint: ## Code - Lint all packages
@@ -272,7 +321,7 @@ health: ## Utilities - Check service health
 	@if curl -s http://localhost:$(PORT_FRONTEND) > /dev/null; then echo "$(GREEN)✅ Frontend is running$(RESET)"; else echo "$(RED)❌ Frontend is down$(RESET)"; fi
 
 cli: ## Utilities - Run CLI
-	@echo "$(BLUE)🛠️ Running Aether Vault CLI...$(RESET)"
+	@echo "$(BLUE)🛠️ Running Aether Shield CLI...$(RESET)"
 	@$(PNPM) cli
 
 logs: ## Utilities - Show development logs

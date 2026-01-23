@@ -1,0 +1,75 @@
+# Dockerfile.dev - Development environment for Aether Shield
+#
+# This Dockerfile is optimized for local development with:
+# - Hot reloading for both Go server and Next.js app
+# - Debugging capabilities
+# - Development dependencies
+# - Mounted volumes for code changes
+# - Single public port exposure (3000)
+#
+
+# Use the official Node.js image as base for development
+FROM node:20-alpine AS base
+
+# Install common dependencies for development
+RUN apk add --no-cache \
+    git \
+    python3 \
+    py3-pip \
+    make \
+    g++ \
+    bash \
+    curl \
+    wget \
+    openssl \
+    tzdata \
+    postgresql-dev \
+    gcc \
+    musl-dev \
+    libpq \
+    && rm -rf /var/cache/apk/*
+
+# Install Go for the server
+RUN curl -L https://golang.org/dl/go1.21.0.linux-amd64.tar.gz | tar -xz -C /usr/local
+ENV PATH=/usr/local/go/bin:$PATH
+ENV GOPATH=/go
+ENV GO111MODULE=on
+
+# Set working directory
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package files first for better layer caching
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy Prisma directory specifically for generation
+COPY prisma/ prisma/
+
+# Install Prisma CLI globally
+RUN npm install -g prisma
+
+# Initialize Prisma client (only for prisma package)
+RUN cd /app/prisma && cp .env.example .env && npx prisma generate
+
+# Copy the rest of the application (this will overwrite prisma/ but that's ok)
+COPY . .
+RUN cd /app/server && go mod tidy
+
+# Expose only the public port
+EXPOSE 3000
+
+# Health check for development
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD curl -f http://localhost:3000 || exit 1
+
+# Copy the start script
+COPY infrastructure/docker/start-dev.sh /app/start-dev.sh
+RUN chmod +x /app/start-dev.sh
+
+# Development entrypoint
+CMD ["sh", "/app/start-dev.sh"]

@@ -1,4 +1,4 @@
-const config = {
+module.exports = {
   schema: "./schema.prisma",
   datasources: {
     db: {
@@ -6,5 +6,3 @@ const config = {
     },
   },
 };
-
-export default config;

@@ -17,8 +17,9 @@ type Config struct {
 
 // ServerConfig contient la configuration serveur
 type ServerConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	Host   string `mapstructure:"host"`
+	Port   int    `mapstructure:"port"`
+	Scheme string `mapstructure:"scheme"` // "http" ou "https"
 }
 
 // AuthConfig contient la configuration d'authentification
@@ -78,7 +79,8 @@ func Load() (*Config, error) {
 
 func setDefaults() {
 	viper.SetDefault("server.host", "localhost")
-	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.port", 3000)
+	viper.SetDefault("server.scheme", "http")
 	viper.SetDefault("auth.method", "pam")
 	viper.SetDefault("auth.timeout", 300)
 	viper.SetDefault("auth.max_sessions", 5)

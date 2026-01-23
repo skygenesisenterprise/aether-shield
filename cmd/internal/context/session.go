@@ -2,11 +2,13 @@ package context
 
 import (
 	"github.com/skygenesisenterprise/aether-shield/cmd/internal/config"
+	"github.com/skygenesisenterprise/aether-shield/cmd/pkg/client"
 )
 
 // Context représente l'état global de la session
 type Context struct {
 	Config     *config.Config
+	Client     *client.Client
 	Session    *Session
 	Permission *Permission
 }
@@ -27,8 +29,17 @@ type Permission struct {
 
 // New crée un nouveau contexte
 func New(cfg *config.Config) *Context {
+	// Créer le client HTTP
+	httpClient, err := client.NewClient(cfg)
+	if err != nil {
+		// Si la création du client échoue, continuer sans client
+		// (mode hors ligne ou commandes locales)
+		httpClient = nil
+	}
+
 	return &Context{
 		Config:     cfg,
+		Client:     httpClient,
 		Session:    NewSession(),
 		Permission: NewPermission(),
 	}
