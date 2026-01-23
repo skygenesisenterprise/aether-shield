@@ -128,37 +128,37 @@ A comprehensive CLI tool for managing Aether Shield deployments, configurations,
 3. **Verify installation**
 
    ```bash
-   shieldctl --version
+   shield --version
    ```
 
 ### 🌐 Usage Examples
 
 ```bash
 # Basic commands
-shieldctl --help
-shieldctl version
-shieldctl status
+shield --help
+shield version
+shield status
 
 # Configuration management
-shieldctl config list
-shieldctl config set key=value
-shieldctl config get key
+shield config list
+shield config set key=value
+shield config get key
 
 # Deployment
-shieldctl deploy --env=production
-shieldctl deploy --env=staging
+shield deploy --env=production
+shield deploy --env=staging
 
 # Monitoring
-shieldctl monitor --interval=30
-shieldctl diagnostics
+shield monitor --interval=30
+shield diagnostics
 
 # Backup
-shieldctl backup create
-shieldctl backup list
-shieldctl backup restore backup-id
+shield backup create
+shield backup list
+shield backup restore backup-id
 
 # Interactive mode
-shieldctl interactive
+shield interactive
 ```
 
 ---
@@ -179,10 +179,10 @@ npm install -g @aether-shield/cli
 
 ```bash
 # Run CLI in Docker container
-docker run -it --rm aether-shield/cli shieldctl --version
+docker run -it --rm aether-shield/cli shield --version
 
 # Interactive session
-docker run -it --rm -v ~/.shieldctl:/root/.shieldctl aether-shield/cli
+docker run -it --rm -v ~/.shield:/root/.shield aether-shield/cli
 ```
 
 ### 🏗️ Local Development Installation
@@ -199,7 +199,7 @@ make install
 make cli-build
 
 # Run locally
-./cmd/shieldctl/shieldctl --version
+./cmd/shield/shield --version
 ```
 
 ---
@@ -492,7 +492,7 @@ package/cli/
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   CLI Commands   │    │   Internal       │    │   External      │
 │   (User Input)   │◄──►│   Actions        │◄──►│   Systems        │
-│  shieldctl       │    │   (Business Logic)│    │  (Aether Shield)│
+│  shield       │    │   (Business Logic)│    │  (Aether Shield)│
 └─────────────────┘    └──────────────────┘    └─────────────────┘
            │                       │                       │
            ▼                       ▼                       ▼
@@ -562,7 +562,7 @@ make install
 make cli-build
 
 # Run CLI
-./cmd/shieldctl/shieldctl --version
+./cmd/shield/shield --version
 
 # Run tests
 make cli-test
@@ -603,12 +603,12 @@ make reset
 
 ```bash
 # Debug CLI
-shieldctl --debug
-shieldctl --verbose
+shield --debug
+shield --verbose
 
 # Profile CLI
-shieldctl --profile=cpu
-shieldctl --profile=mem
+shield --profile=cpu
+shield --profile=mem
 
 # Generate documentation
 make docs
