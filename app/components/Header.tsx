@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Bell, Settings, User, LogOut, Menu } from "lucide-react";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleLogout = () => {
+    router.push("/login");
+  };
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-800 bg-gray-900 px-4">
@@ -64,6 +70,7 @@ export function Header() {
           variant="ghost"
           size="icon"
           className="text-gray-300 hover:bg-gray-800"
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
         </Button>

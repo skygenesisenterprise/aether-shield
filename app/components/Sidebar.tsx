@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   LayoutDashboard,
@@ -634,18 +635,27 @@ function renderMenuItem(
             {item.icon && <item.icon className="h-3 w-3 shrink-0" />}
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden transition-all duration-200 ease-in-out data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown">
-          <div className="space-y-1">
-            {item.children?.map((child) =>
-              renderMenuItem(
-                child,
-                level + 1,
-                pathname,
-                expandedItems,
-                toggleExpanded,
-              ),
-            )}
-          </div>
+        <CollapsibleContent>
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{
+              height: isExpanded ? "auto" : 0,
+              opacity: isExpanded ? 1 : 0
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div className="space-y-1">
+              {item.children?.map((child) =>
+                renderMenuItem(
+                  child,
+                  level + 1,
+                  pathname,
+                  expandedItems,
+                  toggleExpanded,
+                ),
+              )}
+            </div>
+          </motion.div>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -730,18 +740,27 @@ function MenuItem({
             </span>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <div className="mt-1 space-y-1">
-            {item.children?.map((child) =>
-              renderMenuItem(
-                child,
-                level + 1,
-                pathname,
-                expandedItems,
-                toggleExpanded,
-              ),
-            )}
-          </div>
+        <CollapsibleContent>
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{
+              height: isExpanded ? "auto" : 0,
+              opacity: isExpanded ? 1 : 0
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div className="mt-1 space-y-1">
+              {item.children?.map((child) =>
+                renderMenuItem(
+                  child,
+                  level + 1,
+                  pathname,
+                  expandedItems,
+                  toggleExpanded,
+                ),
+              )}
+            </div>
+          </motion.div>
         </CollapsibleContent>
       </Collapsible>
     );
@@ -787,21 +806,35 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900 border-r border-gray-800">
-      <div className="flex h-14 items-center border-b border-gray-800 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex h-14 items-center border-b border-gray-800 px-4"
+      >
         <h1 className="text-lg font-semibold text-gray-200">Aether Shield</h1>
-      </div>
+      </motion.div>
       <nav className="flex-1 overflow-hidden p-2 space-y-1 hover:overflow-auto">
-        {menuItems
-          .sort((a, b) => a.order - b.order)
-          .map((item) => (
-            <MenuItem
-              key={item.href}
-              item={item}
-              pathname={pathname}
-              expandedItems={expandedItems}
-              toggleExpanded={toggleExpanded}
-            />
-          ))}
+        <AnimatePresence>
+          {menuItems
+            .sort((a, b) => a.order - b.order)
+            .map((item) => (
+              <motion.div
+                key={item.href}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <MenuItem
+                  item={item}
+                  pathname={pathname}
+                  expandedItems={expandedItems}
+                  toggleExpanded={toggleExpanded}
+                />
+              </motion.div>
+            ))}
+        </AnimatePresence>
       </nav>
     </div>
   );
