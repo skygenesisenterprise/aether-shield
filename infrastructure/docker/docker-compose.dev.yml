@@ -1,75 +1,188 @@
-# Docker Compose for Development Environment
-#
-# This configuration is optimized for local development with:
-# - Hot reloading
-# - Volume mounting for code changes
-# - Port forwarding
-# - Environment variables for development
-# - Single public port (3000)
-#
-
-version: "3.8"
-
 services:
+  # ============================================
+  # Next.js Application
+  # ============================================
   app:
     build:
-      context: ../..
-      dockerfile: infrastructure/docker/Dockerfile.dev
-    container_name: aether-shield-dev
+      context: ../../app
+      dockerfile: Dockerfile.dev
+    container_name: aether-shield-app
     restart: unless-stopped
     ports:
-      - "3000:3000" # Public port for Next.js
-      - "8080:8080" # Internal port for Go server
+      - "3001:3000" # Internal Next.js port
     volumes:
-      - ../..:/app
+      - ../../app:/app
       - /app/node_modules
-      - /app/app/.next
-      - /app/app/node_modules
-      - /app/server/src
-      - /app/prisma
-      - /tmp/aether-shield-server
+      - /app/.next
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aether_shield?schema=public
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
     networks:
-      - aether-shield-dev
+      - aether-network
     depends_on:
-      - db
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - server
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
 
-  db:
-    image: postgres:15-alpine
-    container_name: aether-shield-db-dev
+  # ============================================
+  # Caddy Reverse Proxy
+  # ============================================
+  caddy:
+    image: caddy:2.8.4-alpine
+    container_name: aether-shield-caddy
     restart: unless-stopped
+    ports:
+      - "3000:3000" # Frontend Next.js
+      - "8080:8080" # Backend API (internal)
+      - "5555:5555" # Prisma Studio (internal)
+      - "2019:2019" # Caddy admin interface
+    volumes:
+      - ../../Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - ../../app:/app
+      - ../../server:/server
+      - ../../prisma:/prisma
+    environment:
+      - CADVISOR_AUTO_HTTPS=off
+      - CADVISOR_ADMIN_DISABLE=true
+    networks:
+      - aether-network
+    depends_on:
+      - app
+      - server
+      - prisma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # Go Server (Backend)
+  # ============================================
+  server:
+    build:
+      context: ../../server
+      dockerfile: Dockerfile.dev
+    container_name: aether-shield-server
+    restart: unless-stopped
+    ports:
+      - "8081:8080" # Internal Go server port
+    volumes:
+      - ../../server:/server
+      - /server/vendor
+    environment:
+      - GOENV=development
+      - PORT=8080
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+    networks:
+      - aether-network
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # Prisma Studio
+  # ============================================
+  prisma:
+    build:
+      context: ../../prisma
+      dockerfile: Dockerfile.dev
+    container_name: aether-shield-prisma
+    restart: unless-stopped
+    ports:
+      - "5556:5555" # Internal Prisma Studio port
+    volumes:
+      - ../../prisma:/prisma
+      - /prisma/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=5555
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+    networks:
+      - aether-network
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: aether-shield-postgres
+    restart: unless-stopped
+    ports:
+      - "5438:5432" # Map host port 5434 to container port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../docker/config/environment/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=aether_shield
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432" # Internal port for database
+      - POSTGRES_DB=aether-shield-dev
     networks:
-      - aether-shield-dev
+      - aether-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-volumes:
-  postgres_data:
-    driver: local
+  # ============================================
+  # Redis Cache
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: aether-shield-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - aether-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
+# ============================================
+# Networks
+# ============================================
 networks:
-  aether-shield-dev:
+  aether-network:
     driver: bridge
+    name: aether-network
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  caddy_data:
+    name: shield-caddy-data
+  caddy_config:
+    name: shield-caddy-config
+  postgres_data:
+    name: shield-postgres-data
+  redis_data:
+    name: shield-redis-data

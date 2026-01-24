@@ -1,0 +1,47 @@
+# Dockerfile.dev - Development stage for Prisma
+FROM node:20-alpine
+
+# ----------------------------
+# Install system dependencies
+# ----------------------------
+RUN apk add --no-cache libc6-compat git bash curl
+
+# ----------------------------
+# Enable Corepack and pnpm
+# ----------------------------
+RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
+
+# ----------------------------
+# Set working directory
+# ----------------------------
+WORKDIR /prisma
+
+# ----------------------------
+# Expose dev ports
+# ----------------------------
+EXPOSE 5555
+
+# ----------------------------
+# Environment variables
+# ----------------------------
+ENV NODE_ENV=development
+ENV PORT=5555
+ENV HOSTNAME=0.0.0.0
+
+# ----------------------------
+# Copy package files and install dependencies
+# ----------------------------
+COPY package.json ./
+
+# Install dependencies as root (avoids permission issues)
+RUN pnpm install --force
+
+# ----------------------------
+# Copy prisma source
+# ----------------------------
+COPY . .
+
+# ----------------------------
+# Start prisma studio as root (for volume permissions)
+# ----------------------------
+CMD ["pnpm", "prisma", "studio"]

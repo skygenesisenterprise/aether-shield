@@ -1,15 +1,14 @@
-# Aether Shield Server Makefile
+# Aether Shield Prisma Makefile
 # 
-# This Makefile provides commands for developing and building the Go server
+# This Makefile provides commands for developing and working with Prisma
 # with support for both direct execution and Docker-based development.
 
 # Configuration
-APP_NAME := aether-shield-server
+APP_NAME := aether-shield-prisma
 DOCKER_COMPOSE := docker compose
 DOCKER_COMPOSE_FILE := docker-compose.dev.yml
 DOCKERFILE := Dockerfile.dev
-PORT := 8080
-GO_VERSION := 1.25.5
+PORT := 5555
 
 # Colors for better output
 RED := \033[0;31m
@@ -24,33 +23,33 @@ RESET := \033[0m
 
 .PHONY: dev
 dev:
-	@echo "$(BLUE)Starting Go server development...$(RESET)"
-	@go run main.go
+	@echo "$(BLUE)Starting Prisma Studio directly...$(RESET)"
+	@pnpm prisma studio
 
-.PHONY: build
-build:
-	@echo "$(BLUE)Building Go server...$(RESET)"
-	@go build -o server ./...
+.PHONY: migrate-dev
+migrate-dev:
+	@echo "$(BLUE)Running Prisma migrations in development...$(RESET)"
+	@pnpm prisma migrate dev
 
-.PHONY: start
-start:
-	@echo "$(BLUE)Starting Go server...$(RESET)"
-	@./server
+.PHONY: generate
+generate:
+	@echo "$(BLUE)Generating Prisma Client...$(RESET)"
+	@pnpm prisma generate
 
-.PHONY: test
-test:
-	@echo "$(BLUE)Running Go tests...$(RESET)"
-	@go test ./...
+.PHONY: format
+format:
+	@echo "$(BLUE)Formatting Prisma schema...$(RESET)"
+	@pnpm prisma format
 
-.PHONY: lint
-lint:
-	@echo "$(BLUE)Running Go linting...$(RESET)"
-	@golangci-lint run
+.PHONY: validate
+validate:
+	@echo "$(BLUE)Validating Prisma schema...$(RESET)"
+	@pnpm prisma validate
 
-.PHONY: vet
-vet:
-	@echo "$(BLUE)Running Go vet...$(RESET)"
-	@go vet ./...
+.PHONY: migrate-deploy
+migrate-deploy:
+	@echo "$(BLUE)Deploying Prisma migrations...$(RESET)"
+	@pnpm prisma migrate deploy
 
 # ----------------------------
 # Docker-based development
@@ -58,7 +57,7 @@ vet:
 
 .PHONY: docker-dev
 docker-dev:
-	@echo "$(BLUE)Starting Go server development with Docker...$(RESET)"
+	@echo "$(BLUE)Starting Prisma Studio with Docker...$(RESET)"
 	@$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) up --build
 
 .PHONY: docker-build
@@ -93,37 +92,38 @@ docker-rebuild:
 
 .PHONY: install
 install:
-	@echo "$(BLUE)Installing Go dependencies...$(RESET)"
-	@go mod download
+	@echo "$(BLUE)Installing dependencies...$(RESET)"
+	@pnpm install
 
 .PHONY: clean
 clean:
 	@echo "$(BLUE)Cleaning build artifacts...$(RESET)"
-	@rm -rf server go.mod go.sum
+	@rm -rf node_modules prisma/generated
 
 .PHONY: status
 status:
-	@echo "$(GREEN)=== Aether Shield Server Status ===$(RESET)"
-	@echo "$(BLUE)Go version:$(RESET) $(shell go version)"
-	@echo "$(BLUE)Required Go version:$(RESET) $(GO_VERSION)"
+	@echo "$(GREEN)=== Aether Shield Prisma Status ===$(RESET)"
+	@echo "$(BLUE)Node version:$(RESET) $(shell node --version)"
+	@echo "$(BLUE)pnpm version:$(RESET) $(shell pnpm --version)"
 	@echo "$(BLUE)Docker status:$(RESET) $(shell docker info > /dev/null 2>&1 && echo "Running" || echo "Not running")"
 	@echo "$(BLUE)Docker Compose status:$(RESET) $(shell $(DOCKER_COMPOSE) version > /dev/null 2>&1 && echo "Available" || echo "Not available")"
+	@echo "$(BLUE)Prisma version:$(RESET) $(shell pnpm prisma --version 2>/dev/null || echo "Not installed")"
 
 .PHONY: help
 help:
-	@echo "$(GREEN)=== Aether Shield Server Makefile Help ===$(RESET)"
-	@echo "$(YELLOW)Direct Development (using Go):$(RESET)"
-	@echo "  make dev              - Start development server"
-	@echo "  make build            - Build production server"
-	@echo "  make start            - Start production server"
-	@echo "  make test             - Run Go tests"
-	@echo "  make lint             - Run Go linting"
-	@echo "  make vet              - Run Go vet"
+	@echo "$(GREEN)=== Aether Shield Prisma Makefile Help ===$(RESET)"
+	@echo "$(YELLOW)Direct Development (using pnpm):$(RESET)"
+	@echo "  make dev              - Start Prisma Studio"
+	@echo "  make migrate-dev      - Run migrations in development mode"
+	@echo "  make generate         - Generate Prisma Client"
+	@echo "  make format           - Format Prisma schema"
+	@echo "  make validate         - Validate Prisma schema"
+	@echo "  make migrate-deploy   - Deploy migrations"
 	@echo "  make install          - Install dependencies"
 	@echo "  make clean            - Clean build artifacts"
 	@echo ""
 	@echo "$(YELLOW)Docker Development:$(RESET)"
-	@echo "  make docker-dev       - Start development with Docker"
+	@echo "  make docker-dev       - Start Prisma Studio with Docker"
 	@echo "  make docker-build     - Build Docker image"
 	@echo "  make docker-up        - Start Docker containers"
 	@echo "  make docker-down      - Stop Docker containers"

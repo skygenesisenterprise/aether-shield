@@ -1,0 +1,43 @@
+# Dockerfile.dev - Development stage for Go server
+FROM golang:1.25.5-alpine
+
+# ----------------------------
+# Install system dependencies
+# ----------------------------
+RUN apk add --no-cache git bash curl build-base
+
+# ----------------------------
+# Set working directory
+# ----------------------------
+WORKDIR /app
+
+# ----------------------------
+# Expose dev ports
+# ----------------------------
+EXPOSE 8080 24678
+
+# ----------------------------
+# Environment variables
+# ----------------------------
+ENV GOENV=development
+ENV PORT=8080
+ENV HOSTNAME=0.0.0.0
+
+# ----------------------------
+# Copy go.mod and go.sum
+# ----------------------------
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# ----------------------------
+# Copy server source
+# ----------------------------
+COPY . .
+
+# ----------------------------
+# Start dev server directly (like "go run main.go")
+# ----------------------------
+# Start server with hot reload using air (if available) or just run
+CMD ["go", "run", "main.go"]

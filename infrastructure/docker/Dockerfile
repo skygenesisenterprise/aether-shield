@@ -1,76 +1,73 @@
-# Aether Shield Development Dockerfile
-# This Dockerfile creates a development environment with hot-reload
-# for both Go backend and Next.js frontend
-#
-# Usage:
-# - docker build -t aether-shield-dev -f infrastructure/docker/Dockerfile .
-# - docker run -it --rm -p 3000:3000 -p 8080:8080 -v $(pwd):/app -v /app/node_modules aether-shield-dev
-#
-# Supported build arguments:
-# - NODE_VERSION: Node.js version (default: 18)
-# - GO_VERSION: Go version (default: 1.21)
-# - PNPM_VERSION: pnpm version (default: latest)
-#
-# =====================================
-# Development Environment
-# =====================================
+# Aether Shield Infrastructure Dockerfile
+# This Dockerfile creates a production-ready infrastructure environment
+# for the Aether Shield platform
 
-FROM docker.io/library/node:18-alpine
+# ============================================
+# Production Environment
+# ============================================
 
-# Set environment variables
-ARG NODE_VERSION=18
-ARG GO_VERSION=1.21
-ARG PNPM_VERSION=latest
+FROM node:20-alpine as builder
 
-ENV NODE_ENV=development \
-    PNPM_VERSION=${PNPM_VERSION} \
-    GO_VERSION=${GO_VERSION} \
-    PORT=3000 \
-    API_PORT=8080
-
-# Install dependencies
+# Install build dependencies
 RUN apk add --no-cache \
     git \
     curl \
     bash \
-    ca-certificates \
-    tzdata \
-    python3 \
-    py3-pip \
     build-base \
-    openssl \
-    postgresql-dev \
-    && pip3 install --upgrade pip \
+    go \
     && rm -rf /var/cache/apk/*
 
-# Install Go
-RUN curl -L https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xz
-ENV PATH=/usr/local/go/bin:${PATH}
-
-# Install pnpm
-RUN npm install -g pnpm@${PNPM_VERSION}
-
-# Install watchman for better file watching
-RUN npm install -g watchman
+# Enable Corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 # Set working directory
 WORKDIR /app
 
-# Copy all source files
-COPY . ./
+# Copy source files from project root
+COPY ../../app/package.json ../../app/pnpm-lock.yaml ./
+COPY ../../app ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Generate Prisma client
-RUN cd prisma && npx prisma generate
+# Build Next.js application
+RUN pnpm build
+
+# ============================================
+# Runtime Environment
+# ============================================
+
+FROM node:20-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    bash \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from builder
+COPY --from=builder /app/.next ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy server files
+COPY ../../server ./
+
+# Environment variables
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
 # Expose ports
 EXPOSE 3000 8080
 
 # Start script
-COPY infrastructure/docker/start-dev.sh /start-dev.sh
-RUN chmod +x /start-dev.sh
+COPY infrastructure/docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
-# Start development servers
-CMD ["/start-dev.sh"]
+# Start production server
+CMD ["/start.sh"]
