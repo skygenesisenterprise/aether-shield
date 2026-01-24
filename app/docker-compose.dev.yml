@@ -1,0 +1,33 @@
+services:
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aether-shield-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      CHOKIDAR_USEPOLLING: "true"
+    user: root
+    volumes:
+      - .:/app # Montre le code source
+      - /app/node_modules # Persistance du node_modules
+    restart: unless-stopped
+    # Pas besoin de user: root car c’est le défaut
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  aether-network-dev:
+    driver: bridge
+
+volumes:
+  node_modules:
+  next_cache:

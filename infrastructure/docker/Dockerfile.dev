@@ -8,8 +8,77 @@
 # - Single public port exposure (3000)
 #
 
-# Use the official Node.js image as base for development
-FROM node:20-alpine AS base
+# Stage 1: Build the Next.js app using the dedicated app/Dockerfile.dev
+FROM node:18-alpine AS nextjs-dev
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat git
+
+# Set working directory
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package files
+COPY app/package.json app/pnpm-lock.yaml ./app/
+
+# Install all dependencies (including dev dependencies)
+RUN cd /app && pnpm install
+
+# Copy source code
+COPY app/. /app/
+
+# Create non-root user first
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Switch to non-root user before creating directories
+USER nextjs
+
+# Create necessary directories as the non-root user
+RUN mkdir -p /app/.next/cache /app/public
+
+# Set environment variables for development
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Expose port
+EXPOSE 3000
+
+# Stage 2: Build the Go server
+FROM golang:1.21-alpine AS go-dev
+
+# Install common dependencies for development
+RUN apk add --no-cache \
+    git \
+    python3 \
+    py3-pip \
+    make \
+    g++ \
+    bash \
+    curl \
+    wget \
+    openssl \
+    tzdata \
+    postgresql-dev \
+    gcc \
+    musl-dev \
+    libpq \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy the server code
+COPY server/ /app/server/
+
+# Install Go dependencies
+RUN cd /app/server && go mod tidy
+
+# Stage 3: Final development environment
+FROM node:20-alpine AS developer
 
 # Install common dependencies for development
 RUN apk add --no-cache \
@@ -35,17 +104,17 @@ ENV PATH=/usr/local/go/bin:$PATH
 ENV GOPATH=/go
 ENV GO111MODULE=on
 
-# Set working directory
-WORKDIR /app
-
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy package files first for better layer caching
-COPY package.json pnpm-lock.yaml ./
+# Set working directory
+WORKDIR /app
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Copy from Next.js stage
+COPY --from=nextjs-dev /app /app
+
+# Copy from Go stage
+COPY --from=go-dev /app/server /app/server
 
 # Copy Prisma directory specifically for generation
 COPY prisma/ prisma/
@@ -55,10 +124,6 @@ RUN npm install -g prisma
 
 # Initialize Prisma client (only for prisma package)
 RUN cd /app/prisma && cp .env.example .env && npx prisma generate
-
-# Copy the rest of the application (this will overwrite prisma/ but that's ok)
-COPY . .
-RUN cd /app/server && go mod tidy
 
 # Expose only the public port
 EXPOSE 3000

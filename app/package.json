@@ -5,12 +5,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "./start-dev.sh",
+    "dev": "next dev --hostname 0.0.0.0 --port 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "dev:local": "NODE_ENV=development ./start-dev.sh",
-    "dev:debug": "NODE_ENV=development DEBUG=* ./start-dev.sh",
+    "dev:local": "NODE_ENV=development start-dev.sh",
+    "dev:debug": "NODE_ENV=development DEBUG=* start-dev.sh",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next"
   },
@@ -84,5 +84,6 @@
     "prisma": "7.2.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.28.1+sha512.7d7dbbca9e99447b7c3bf7a73286afaaf6be99251eb9498baefa7d406892f67b879adb3a1d7e687fc4ccc1a388c7175fbaae567a26ab44d1067b54fcb0d6a316"
 }
