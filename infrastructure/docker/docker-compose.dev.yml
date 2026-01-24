@@ -10,8 +10,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: aether-shield-app
     restart: unless-stopped
-    ports:
-      - "3000:3000" # Next.js exposed port
+    # ports supprimés pour éviter les conflits avec Dokploy/Caddy
     volumes:
       - ../../app:/app
       - /app/node_modules
@@ -21,7 +20,7 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
       CHOKIDAR_USEPOLLING: "true"
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      NEXT_PUBLIC_API_URL: http://aether-server:8080/api
     networks:
       - aether-network
     depends_on:
@@ -40,9 +39,9 @@ services:
     container_name: aether-shield-caddy
     restart: unless-stopped
     ports:
-      - "3000:3000" # Frontend Next.js
-      - "8080:8080" # Backend API
-      - "5555:5555" # Prisma Studio
+      - "3000:3000" # Port public pour le domaine
+      - "8080:8080" # Backend API (interne, accessible via Caddy)
+      - "5555:5555" # Prisma Studio (interne)
       - "2019:2019" # Caddy admin
     volumes:
       - ../../Caddyfile:/etc/caddy/Caddyfile:ro
@@ -76,7 +75,7 @@ services:
     container_name: aether-shield-server
     restart: unless-stopped
     ports:
-      - "8081:8080" # Exposed host port
+      - "8081:8080"
     volumes:
       - ../../server:/server
       - /server/vendor
@@ -84,7 +83,7 @@ services:
       GOENV: development
       PORT: 8080
       HOSTNAME: 0.0.0.0
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+      DATABASE_URL: postgresql://postgres:postgres@aether-postgres:5432/aether-shield-dev?sslmode=disable
     networks:
       - aether-network
     depends_on:
@@ -113,7 +112,7 @@ services:
       NODE_ENV: development
       PORT: 5555
       HOSTNAME: 0.0.0.0
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+      DATABASE_URL: postgresql://postgres:postgres@aether-postgres:5432/aether-shield-dev?sslmode=disable
     networks:
       - aether-network
     depends_on:
