@@ -1,29 +1,31 @@
+version: "3.9"
+
 services:
   # ============================================
   # Next.js Application
   # ============================================
-  app:
+  aether-app:
     build:
       context: ../../app
       dockerfile: Dockerfile.dev
     container_name: aether-shield-app
     restart: unless-stopped
     ports:
-      - "3001:3000" # Internal Next.js port
+      - "3000:3000" # Next.js exposed port
     volumes:
       - ../../app:/app
       - /app/node_modules
       - /app/.next
     environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - CHOKIDAR_USEPOLLING=true
-      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+      NODE_ENV: development
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      CHOKIDAR_USEPOLLING: "true"
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
     networks:
       - aether-network
     depends_on:
-      - server
+      - aether-server
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -33,15 +35,15 @@ services:
   # ============================================
   # Caddy Reverse Proxy
   # ============================================
-  caddy:
+  aether-caddy:
     image: caddy:2.8.4-alpine
     container_name: aether-shield-caddy
     restart: unless-stopped
     ports:
       - "3000:3000" # Frontend Next.js
-      - "8080:8080" # Backend API (internal)
-      - "5555:5555" # Prisma Studio (internal)
-      - "2019:2019" # Caddy admin interface
+      - "8080:8080" # Backend API
+      - "5555:5555" # Prisma Studio
+      - "2019:2019" # Caddy admin
     volumes:
       - ../../Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -50,14 +52,14 @@ services:
       - ../../server:/server
       - ../../prisma:/prisma
     environment:
-      - CADVISOR_AUTO_HTTPS=off
-      - CADVISOR_ADMIN_DISABLE=true
+      CADVISOR_AUTO_HTTPS: "off"
+      CADVISOR_ADMIN_DISABLE: "true"
     networks:
       - aether-network
     depends_on:
-      - app
-      - server
-      - prisma
+      - aether-app
+      - aether-server
+      - aether-prisma
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -67,26 +69,26 @@ services:
   # ============================================
   # Go Server (Backend)
   # ============================================
-  server:
+  aether-server:
     build:
       context: ../../server
       dockerfile: Dockerfile.dev
     container_name: aether-shield-server
     restart: unless-stopped
     ports:
-      - "8081:8080" # Internal Go server port
+      - "8081:8080" # Exposed host port
     volumes:
       - ../../server:/server
       - /server/vendor
     environment:
-      - GOENV=development
-      - PORT=8080
-      - HOSTNAME=0.0.0.0
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+      GOENV: development
+      PORT: 8080
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
     networks:
       - aether-network
     depends_on:
-      - postgres
+      - aether-postgres
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -96,26 +98,26 @@ services:
   # ============================================
   # Prisma Studio
   # ============================================
-  prisma:
+  aether-prisma:
     build:
       context: ../../prisma
       dockerfile: Dockerfile.dev
     container_name: aether-shield-prisma
     restart: unless-stopped
     ports:
-      - "5556:5555" # Internal Prisma Studio port
+      - "5556:5555"
     volumes:
       - ../../prisma:/prisma
       - /prisma/node_modules
     environment:
-      - NODE_ENV=development
-      - PORT=5555
-      - HOSTNAME=0.0.0.0
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
+      NODE_ENV: development
+      PORT: 5555
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aether-shield-dev?sslmode=disable
     networks:
       - aether-network
     depends_on:
-      - postgres
+      - aether-postgres
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5555"]
       interval: 30s
@@ -125,19 +127,19 @@ services:
   # ============================================
   # PostgreSQL Database
   # ============================================
-  postgres:
+  aether-postgres:
     image: postgres:16-alpine
     container_name: aether-shield-postgres
     restart: unless-stopped
     ports:
-      - "5438:5432" # Map host port 5434 to container port 5432
+      - "5438:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../../docker/config/environment/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=aether-shield-dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aether-shield-dev
     networks:
       - aether-network
     healthcheck:
@@ -149,7 +151,7 @@ services:
   # ============================================
   # Redis Cache
   # ============================================
-  redis:
+  aether-redis:
     image: redis:7-alpine
     container_name: aether-shield-redis
     restart: unless-stopped
