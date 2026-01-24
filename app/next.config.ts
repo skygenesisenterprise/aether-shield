@@ -1,131 +1,95 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  poweredByHeader: false,
+  // ============================
+  // Packages à transpiler
+  // ============================
+  transpilePackages: ["@heroicons/react"],
 
-  // Required for Docker standalone output
-  output: "standalone",
-
+  // ============================
+  // Images (Next 16+)
+  // ============================
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "vault.skygenesisenterprise.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "vault.skygenesisenterprise.net",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.0",
-        port: "",
-        pathname: "/**",
-      },
-      {
         protocol: "http",
         hostname: "localhost",
-        port: "",
+        port: "3000",
         pathname: "/**",
       },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "3000",
+        pathname: "/**",
+      },
+      { protocol: "http", hostname: "0.0.0.0", port: "3000", pathname: "/**" },
     ],
-    unoptimized: false,
+    unoptimized: true,
   },
 
-  async rewrites() {
-    // Configuration robuste pour développement et production
-    const isProduction = process.env.NODE_ENV === "production";
-
-    // Déterminer l'URL du backend selon l'environnement
-    let backendUrl: string;
-
-    if (process.env.BACKEND_URL) {
-      // Priorité à la variable d'environnement explicite
-      backendUrl = process.env.BACKEND_URL;
-    } else if (isProduction) {
-      // En production, utiliser l'URL de l'API ou fallback
-      backendUrl = process.env.API_BASE_URL || "https://api.yourdomain.com";
-    } else {
-      // En développement, utiliser localhost
-      backendUrl = "http://localhost:8080";
-    }
-
-    // Validation de l'URL
-    try {
-      new URL(backendUrl);
-    } catch (error) {
-      console.error("❌ Invalid backend URL:", backendUrl, error);
-      // Fallback sécurisé
-      backendUrl = "http://localhost:8080";
-    }
-
-    const rewrites = [
-      // Proxy API v1 routes (priorité haute)
-      {
-        source: "/api/v1/:path*",
-        destination: `${backendUrl}/api/v1/:path*`,
-      },
-
-      // Proxy health check
-      {
-        source: "/health",
-        destination: `${backendUrl}/health`,
-      },
-
-      // Proxy OIDC well-known endpoints
-      {
-        source: "/.well-known/:path*",
-        destination: `${backendUrl}/.well-known/:path*`,
-      },
-
-      // Proxy autres routes API (fallback)
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/:path*`,
-      },
-    ];
-
-    console.log("📝 Rewrites configured:", rewrites.length, "rules");
-    return rewrites;
+  // ============================
+  // Dev indicators
+  // ============================
+  devIndicators: {
+    position: "bottom-right",
   },
 
+  // ============================
+  // Headers globaux pour dev + CORS
+  // ============================
   async headers() {
-    const isProduction = process.env.NODE_ENV === "production";
-
-    const baseHeaders = [
-      { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "Referrer-Policy", value: "origin-when-cross-origin" },
-      { key: "X-XSS-Protection", value: "1; mode=block" },
-    ];
-
-    // Headers spécifiques à l'environnement
-    if (isProduction) {
-      baseHeaders.push(
-        { key: "X-Frame-Options", value: "DENY" },
-        {
-          key: "Strict-Transport-Security",
-          value: "max-age=31536000; includeSubDomains",
-        },
-        {
-          key: "Permissions-Policy",
-          value: "camera=(), microphone=(), geolocation=()",
-        },
-      );
-    } else {
-      baseHeaders.push({ key: "X-Frame-Options", value: "SAMEORIGIN" });
-    }
-
     return [
       {
         source: "/(.*)",
-        headers: baseHeaders,
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization, X-Requested-With",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" }, // force MIME correct
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" }, // force refresh en dev
+        ],
       },
     ];
+  },
+
+  // ============================
+  // Redirects / Rewrites pour statics si besoin
+  // ============================
+  async rewrites() {
+    return [
+      {
+        source: "/_next/static/:path*",
+        destination: "/_next/static/:path*",
+      },
+    ];
+  },
+
+  // ============================
+  // Turbopack configuration
+  // ============================
+  turbopack: {},
+
+  // ============================
+  // Webpack placeholder (si nécessaire)
+  // ============================
+  webpack: (config, { isServer }) => {
+    // On ne touche pas aux CSS/JS, Turbopack gère tout
+    return config;
+  },
+
+  // ============================
+  // HTTP Headers forcés côté Next pour statics
+  // ============================
+  experimental: {
+    forceSwcTransforms: true, // assure transformations modernes
+    typedRoutes: true,
   },
 };
 

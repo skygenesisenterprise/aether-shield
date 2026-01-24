@@ -1,10 +1,8 @@
+# Caddyfile for Aether Shield Development
+# ========================================
+
 {
-    # ========================
-    # CONFIGURATION GLOBALE
-    # ========================
     admin localhost:2019
-    auto_https off
-    encode zstd gzip
     grace_period 5s
 
     log {
@@ -17,25 +15,12 @@
     }
 }
 
-# ========================
-# BACKEND GO (INTERNES)
-# ========================
-:8080 {
-    bind 127.0.0.1
-    respond "Backend service running" 200
-}
-
-# Service interne additionnel
-:5555 {
-    bind 127.0.0.1
-    respond "Internal service running" 200
-}
-
-# ========================
-# SERVEUR NEXT.JS (PUBLIC)
-# ========================
 :3000 {
+    encode zstd gzip
+
+    # ----------------------
     # CORS Preflight
+    # ----------------------
     @cors_preflight method OPTIONS
     handle @cors_preflight {
         header Access-Control-Allow-Origin "*"
@@ -44,78 +29,52 @@
         respond "" 204
     }
 
-    # API vers backend Go
+    # ----------------------
+    # API Backend
+    # ----------------------
     handle /api/* {
-        reverse_proxy 127.0.0.1:8080 {
-            health_uri /health
-            health_interval 30s
-            health_timeout 5s
-            health_status 200
-
-            header_up Host {http.request.host}
-            header_up X-Real-IP {http.request.remote_host}
-            header_up X-Forwarded-For {http.request.remote_host}
-            header_up X-Forwarded-Proto {http.request.scheme}
-        }
+        reverse_proxy aether-server:8080
     }
 
-    # Services internes additionnels
-    handle /internal/* {
-        reverse_proxy 127.0.0.1:5555 {
-            health_uri /health
-            health_interval 30s
-            health_timeout 5s
-            health_status 200
-
-            header_up Host {http.request.host}
-            header_up X-Real-IP {http.request.remote_host}
-            header_up X-Forwarded-For {http.request.remote_host}
-            header_up X-Forwarded-Proto {http.request.scheme}
-        }
+    # ----------------------
+    # Prisma Studio
+    # ----------------------
+    handle /prisma/* {
+        reverse_proxy aether-prisma:5555
     }
 
-    # Health check public
-    handle /health {
-        reverse_proxy 127.0.0.1:8080
-    }
-
+    # ----------------------
     # Websockets
+    # ----------------------
     handle /ws/* {
-        reverse_proxy 127.0.0.1:8080 {
+        reverse_proxy aether-server:8080 {
             header_up Upgrade {http.request.header.Upgrade}
             header_up Connection {http.request.header.Connection}
         }
     }
 
-    # Static assets
-    @static {
-        path *.css *.js *.png *.jpg *.jpeg *.gif *.webp *.svg *.ico *.woff *.woff2
-    }
-    handle @static {
-        header Cache-Control "public, max-age=2592000"
-    }
-
-    handle /_next/static/* {
-        header Cache-Control "public, max-age=31536000, immutable"
-    }
-
-    # Frontend SPA Next.js
+    # ----------------------
+    # Next.js static files & app
+    # ----------------------
     handle /* {
-        reverse_proxy 127.0.0.1:3001
+        reverse_proxy aether-app:3000
     }
 
-    # Security headers
+    # ----------------------
+    # Security Headers
+    # ----------------------
     header {
         X-Content-Type-Options "nosniff"
-        X-Frame-Options "DENY"
+        X-Frame-Options "SAMEORIGIN"
         X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none';"
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" {if_ssl}
+        Referrer-Policy "no-referrer-when-downgrade"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https:; style-src 'self' 'unsafe-inline' http: https:; img-src 'self' data: http: https:; font-src 'self' data: http: https:; connect-src 'self' ws: wss: http: https:; frame-ancestors 'self';"
     }
 
-    # Error handling
+    # ----------------------
+    # Error Handling
+    # ----------------------
     handle_errors 502 503 504 {
-        respond "Backend service temporarily unavailable. Please try again later." 503
+        respond "Backend temporarily unavailable. Please try again later." 503
     }
 }

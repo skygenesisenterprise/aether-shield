@@ -40,9 +40,7 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000" # Port public pour le domaine
-      - "8080:8080" # Backend API (interne, accessible via Caddy)
-      - "5555:5555" # Prisma Studio (interne)
-      - "2019:2019" # Caddy admin
+      - "2019:2019" # Caddy admin (optionnel pour le développement)
     volumes:
       - ../../Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -74,8 +72,6 @@ services:
       dockerfile: Dockerfile.dev
     container_name: aether-shield-server
     restart: unless-stopped
-    ports:
-      - "8081:8080"
     volumes:
       - ../../server:/server
       - /server/vendor
@@ -103,8 +99,6 @@ services:
       dockerfile: Dockerfile.dev
     container_name: aether-shield-prisma
     restart: unless-stopped
-    ports:
-      - "5556:5555"
     volumes:
       - ../../prisma:/prisma
       - /prisma/node_modules
