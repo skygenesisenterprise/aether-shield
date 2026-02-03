@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "i18next": "^23.0.0",
-    "react-i18next": "^13.0.0"
+    "react-i18next": "^16.5.4"
   },
   "devDependencies": {
     "@types/i18next": "^13.0.0",
